@@ -70,6 +70,8 @@ function onFileChange(view, model)
             data = load(filepath, 'results');
             
             BrillouinShift = nanmean(data.results.results.BrillouinShift_frequency, 4);
+            
+            %% two dimensional case
             x = data.results.parameters.positions.X;
             y = data.results.parameters.positions.Y;
 %             z = data.results.parameters.positions.Z;
@@ -78,6 +80,20 @@ function onFileChange(view, model)
             xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
             ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
 %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
+            colorbar(ax);
+            
+            %% Extract positions to show in ODT and Fluorescence
+            minX = min(x(:));
+            maxX = max(x(:));
+            xPos = [minX, maxX, maxX, minX, minX];
+            Brillouin.position.x = xPos;
+            minY = min(y(:));
+            maxY = max(y(:));
+            yPos = [minY, minY, maxY, maxY, minY];
+            Brillouin.position.y = yPos;
+            
+            model.Brillouin = Brillouin;
+            %% Update field of view
             onFOVChange(view, model);
         catch
             imagesc(ax, NaN);

@@ -12,6 +12,9 @@ function ODT(view, model)
     
     addlistener(model, 'parameters', 'PostSet', ...
         @(o,e) onFOVChange(view, e.AffectedObject));
+    
+    addlistener(model, 'Brillouin', 'PostSet', ...
+        @(o,e) onBrillouinChange(view, e.AffectedObject));
 end
 
 function initGUI(~, view)
@@ -36,6 +39,7 @@ function initGUI(~, view)
         'repetition', repetition, ...
         'repetitionCount', repetitionCount, ...
         'plot', NaN, ...
+        'positionPlot', NaN, ...
         'axesImage', axesImage ...
 	);
 end
@@ -79,8 +83,10 @@ function onFileChange(view, model)
             xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
             ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
             colormap(ax, 'jet');
+            colorbar(ax);
 %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
             onFOVChange(view, model);
+            onBrillouinChange(view, model);
         catch
         end
     else
@@ -97,5 +103,16 @@ function onFOVChange(view, model)
     end
     if model.parameters.ylim(1) < model.parameters.ylim(2)
         ylim(ax, [model.parameters.ylim]);
+    end
+end
+
+function onBrillouinChange(view, model)
+    if ~isempty(model.ODT.repetitions)
+        ax = view.ODT.axesImage;
+        hold(ax, 'on');
+        if ishandle(view.ODT.positionPlot)
+            delete(view.ODT.positionPlot)
+        end
+        view.ODT.positionPlot = plot(ax, model.Brillouin.position.x, model.Brillouin.position.y, 'color', 'red', 'linewidth', 1.5);
     end
 end

@@ -12,6 +12,9 @@ function Fluorescence(view, model)
     
     addlistener(model, 'parameters', 'PostSet', ...
         @(o,e) onFOVChange(view, e.AffectedObject));
+    
+    addlistener(model, 'Brillouin', 'PostSet', ...
+        @(o,e) onBrillouinChange(view, e.AffectedObject));
 end
 
 function initGUI(~, view)
@@ -42,6 +45,7 @@ function initGUI(~, view)
         'repetitionCount', repetitionCount, ...
         'type', type, ...
         'plot', NaN, ...
+        'positionPlot', NaN, ...
         'axesImage', axesImage ...
 	);
 end
@@ -81,6 +85,8 @@ function onFileChange(view, model)
             axis(ax, 'equal');
             xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
             ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
+            caxis(ax, [min(image(:)), max(image(:))]);
+            colorbar(ax);
             switch (type)
                 case 'Brightfield'
                     colormap(ax, 'gray')
@@ -99,6 +105,7 @@ function onFileChange(view, model)
             end
 %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
             onFOVChange(view, model);
+            onBrillouinChange(view, model);
         catch
             set(handles.type, 'String', '');
         end
@@ -117,5 +124,16 @@ function onFOVChange(view, model)
     end
     if model.parameters.ylim(1) < model.parameters.ylim(2)
         ylim(ax, [model.parameters.ylim]);
+    end
+end
+
+function onBrillouinChange(view, model)
+    if ~isempty(model.Fluorescence.repetitions)
+        ax = view.Fluorescence.axesImage;
+        hold(ax, 'on');
+        if ishandle(view.Fluorescence.positionPlot)
+            delete(view.Fluorescence.positionPlot)
+        end
+        view.Fluorescence.positionPlot = plot(ax, model.Brillouin.position.x, model.Brillouin.position.y, 'color', 'red', 'linewidth', 1.5);
     end
 end
