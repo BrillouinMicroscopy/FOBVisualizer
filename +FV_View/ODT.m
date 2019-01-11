@@ -116,6 +116,10 @@ function onBrillouinChange(view, model)
         if ishandle(view.ODT.positionPlot)
             delete(view.ODT.positionPlot)
         end
-        view.ODT.positionPlot = plot(ax, model.Brillouin.position.x, model.Brillouin.position.y, 'color', 'red', 'linewidth', 1.5);
+        if length(model.Brillouin.position.x) == 1
+            view.ODT.positionPlot = plot(ax, model.Brillouin.position.x, model.Brillouin.position.y, 'color', 'red', 'linewidth', 1.5, 'marker', 'o');
+        else
+            view.ODT.positionPlot = plot(ax, model.Brillouin.position.x, model.Brillouin.position.y, 'color', 'red', 'linewidth', 1.5);
+        end
     end
 end
