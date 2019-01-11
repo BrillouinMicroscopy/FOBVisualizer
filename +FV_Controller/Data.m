@@ -19,6 +19,9 @@ function selectLoadData(~, ~, model)
 end
 
 function openFile(model, filePath)
+    if isempty(filePath) || ~sum(filePath)
+        return
+    end
     model.reset;
     % Load the h5bm data file
     model.log.log(['I/File: Opened file "' filePath '"']);
