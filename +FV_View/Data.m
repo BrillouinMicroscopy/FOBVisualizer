@@ -14,9 +14,13 @@ end
 function initGUI(~, view)
     parent = view.data.parent;
 
+    file_information = uipanel('Parent', parent, 'Title', 'File information', 'FontSize', 11,...
+                 'Position', [.01 .93 .98 .065]);
     
     %% Return handles
     view.data = struct(...
+        'parent', parent, ...
+        'file_information', file_information ...
 	);
 end
 

@@ -9,17 +9,48 @@ classdef Model < handle
         controllers;        % handle to all controllers
         pp = [];            % path to the program
         log;                % logging object
+        parameters;         % general parameters
+        Brillouin;          % parameters of the Brillouin measurement
+        Fluorescence;       % parameters of the Fluorescence measurement
+        ODT;                % parameters of the ODT measurement
     end
     properties (Constant)
         programVersion = getProgramVersion();
+        % Saved to evaluated data file
+        defaultBrillouin = struct( ...
+            'repetitions', {{}}, ...
+            'repetition', 0 ...
+        );
+        defaultFluorescence = struct( ...
+            'repetitions', {{}}, ...
+            'repetition', 0 ...
+        );
+        defaultODT = struct( ...
+            'repetitions', {{}}, ...
+            'repetition', 0 ...
+        );
+        defaultParameters = struct( ...
+            'magnification', 57, ...    % [1]   microscope magnification
+            'pixelSize', 4.8e-6, ...    % [µm]  camera pixel size
+            'xlim', [NaN NaN], ...
+            'ylim', [NaN NaN] ...
+        );
     end
 
     methods
         function obj = Model()
+            obj.Brillouin = obj.defaultBrillouin();
+            obj.Fluorescence = obj.defaultFluorescence();
+            obj.ODT = obj.defaultODT();
+            obj.parameters = obj.defaultParameters();
         end
         %% Function to reset the model
         function reset(obj)
             obj.file = [];
+            obj.Brillouin = obj.defaultBrillouin();
+            obj.Fluorescence = obj.defaultFluorescence();
+            obj.ODT = obj.defaultODT();
+            obj.parameters = obj.defaultParameters();
         end
     end
 end

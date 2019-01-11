@@ -6,9 +6,9 @@ function Window(model, view)
 end
 
 function initGUI(model, view)
-    f = figure('Visible','off','Position',[-1000,200,900,650]);
+    f = figure('Visible','off','Position',[-1000,200,1400,800]);
     % hide the menubar and prevent resizing
-    set(f, 'menubar', 'none', 'Resize','off');
+    set(f, 'menubar', 'none', 'Resize', 'off');
     
     % set menubar
     menubar.file = uimenu(f,'Label','File');
@@ -20,8 +20,14 @@ function initGUI(model, view)
     menubar.helpAbout  = uimenu(menubar.help,'Label','About','Accelerator','A');
     
     view.data.parent = f;
+    view.ODT.parent = f;
+    view.Fluorescence.parent = f;
+    view.Brillouin.parent = f;
     
     FV_View.Data(view, model);
+    FV_View.ODT(view, model);
+    FV_View.Fluorescence(view, model);
+    FV_View.Brillouin(view, model);
                  
     % Assign the name to appear in the window title.
     version = sprintf('%d.%d.%d', model.programVersion.major, model.programVersion.minor, model.programVersion.patch);

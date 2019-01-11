@@ -4,6 +4,9 @@ classdef View < handle
     % observable properties, listeners are notified on change
     properties (SetObservable = true)
         data;
+        ODT;
+        Fluorescence;
+        Brillouin;
         help;
         figure;
         menubar;
