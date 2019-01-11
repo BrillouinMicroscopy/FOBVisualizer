@@ -41,6 +41,7 @@ function initGUI(~, view)
         'repetition', repetition, ...
         'repetitionCount', repetitionCount, ...
         'type', type, ...
+        'plot', NaN, ...
         'axesImage', axesImage ...
 	);
 end
@@ -75,7 +76,7 @@ function onFileChange(view, model)
             y = 4.8*(1:size(image, 2))/57;
             y = y - nanmean(y(:));
     
-            imagesc(ax, x, y, image);
+            view.Fluorescence.plot = imagesc(ax, x, y, image);
             shading(ax, 'flat');
             axis(ax, 'equal');
             xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
@@ -101,6 +102,11 @@ function onFileChange(view, model)
         catch
             set(handles.type, 'String', '');
         end
+    else
+        if ishandle(view.Fluorescence.plot)
+            delete(view.Fluorescence.plot)
+        end
+        set(handles.type, 'String', '');
     end
 end
 

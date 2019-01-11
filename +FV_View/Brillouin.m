@@ -35,6 +35,7 @@ function initGUI(~, view)
         'parent', parent, ...
         'repetition', repetition, ...
         'repetitionCount', repetitionCount, ...
+        'plot', NaN, ...
         'axesImage', axesImage ...
 	);
 end
@@ -72,7 +73,7 @@ function onFileChange(view, model)
             x = data.results.parameters.positions.X;
             y = data.results.parameters.positions.Y;
 %             z = data.results.parameters.positions.Z;
-            imagesc(ax, x(1,:), y(:,1), BrillouinShift);
+            view.Brillouin.plot = imagesc(ax, x(1,:), y(:,1), BrillouinShift);
             axis(ax, 'equal');
             xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
             ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
@@ -80,6 +81,10 @@ function onFileChange(view, model)
             onFOVChange(view, model);
         catch
             imagesc(ax, NaN);
+        end
+    else
+        if ishandle(view.Brillouin.plot)
+            delete(view.Brillouin.plot)
         end
     end
 end
