@@ -88,6 +88,9 @@ function onFileChange(view, model)
             onFOVChange(view, model);
             onBrillouinChange(view, model);
         catch
+            if ishandle(view.ODT.plot)
+                delete(view.ODT.plot)
+            end
         end
     else
         if ishandle(view.ODT.plot)

@@ -107,6 +107,9 @@ function onFileChange(view, model)
             onFOVChange(view, model);
             onBrillouinChange(view, model);
         catch
+            if ishandle(view.Fluorescence.plot)
+                delete(view.Fluorescence.plot)
+            end
             set(handles.type, 'String', '');
         end
     else

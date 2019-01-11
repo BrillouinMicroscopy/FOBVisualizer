@@ -96,7 +96,9 @@ function onFileChange(view, model)
             %% Update field of view
             onFOVChange(view, model);
         catch
-            imagesc(ax, NaN);
+            if ishandle(view.Brillouin.plot)
+                delete(view.Brillouin.plot)
+            end
         end
     else
         if ishandle(view.Brillouin.plot)
