@@ -87,6 +87,9 @@ function onFileChange(view, model)
             data = load(filepath, 'Reconimg', 'res3', 'res4');
             
             ZP4=round(size(data.Reconimg,1));
+            if ishandle(view.ODT.plot)
+                delete(view.ODT.plot)
+            end
             view.ODT.plot = imagesc(ax, ((1:ZP4)-ZP4/2)*data.res3,((1:ZP4)-ZP4/2)*data.res3,max(real(data.Reconimg),[],3),[n_m-0.005 n_s]);
             axis(ax, 'equal');
             xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');

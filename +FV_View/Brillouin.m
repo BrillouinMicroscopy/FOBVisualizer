@@ -103,6 +103,9 @@ function onFileChange(view, model)
                 end
             end
             
+            if ishandle(view.Brillouin.plot)
+                delete(view.Brillouin.plot)
+            end
             switch (dimension)
                 case 0
                 case 1

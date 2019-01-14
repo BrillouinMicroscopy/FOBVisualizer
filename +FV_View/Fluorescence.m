@@ -88,6 +88,9 @@ function onFileChange(view, model)
             y = 4.8*(1:size(image, 2))/57;
             y = y - nanmean(y(:));
     
+            if ishandle(view.Fluorescence.plot)
+                delete(view.Fluorescence.plot)
+            end
             view.Fluorescence.plot = imagesc(ax, x, y, image);
             shading(ax, 'flat');
             axis(ax, 'equal');
