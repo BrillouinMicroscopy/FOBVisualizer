@@ -104,6 +104,7 @@ function onFileChange(view, model)
                     colormap(ax, blueColor);
             end
 %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
+            set(ax, 'yDir', 'normal');
             onFOVChange(view, model);
             onBrillouinChange(view, model);
         catch

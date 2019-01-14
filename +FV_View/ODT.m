@@ -84,6 +84,7 @@ function onFileChange(view, model)
             ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
             colormap(ax, 'jet');
             colorbar(ax);
+            set(ax, 'yDir', 'normal');
 %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
             onFOVChange(view, model);
             onBrillouinChange(view, model);

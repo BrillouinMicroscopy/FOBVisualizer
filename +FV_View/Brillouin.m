@@ -122,6 +122,7 @@ function onFileChange(view, model)
                     ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
         %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
                     colorbar(ax);
+                    set(ax, 'yDir', 'normal');
 
                     %% Extract positions to show in ODT and Fluorescence
                     minX = min(positions.x(:));
