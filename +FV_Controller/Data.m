@@ -33,9 +33,9 @@ function openFile(model, filePath)
     if ~isequal(PathName,0) && exist(filePath, 'file')
         
         %% Store file handle
-        model.file = FV_Utils.HDF5Storage.h5bmread(filePath);
-        
         model.filename = [name extension];
+        
+        model.file = FV_Utils.HDF5Storage.h5bmread(filePath);
         
         %% Try to load either ODT or Fluorescence file to figure out the resolution
         parameters = model.parameters;

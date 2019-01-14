@@ -29,7 +29,12 @@ function initGUI(~, view)
     repetitionCount = uicontrol('Parent', parent, 'Style','text','String','0', 'Units', 'normalized',...
                'Position',[0.22,0.885,0.02,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
     
-    axesImage = axes('Parent', parent, 'Position', [0.01 .06 .30 .76]);
+    uicontrol('Parent', parent, 'Style','text','String','Date:', 'Units', 'normalized',...
+               'Position',[0.01,0.85,0.15,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    date = uicontrol('Parent', parent, 'Style','text','String','', 'Units', 'normalized',...
+               'Position',[0.14,0.85,0.19,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    
+    axesImage = axes('Parent', parent, 'Position', [0.01 .06 .30 .74]);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
     
@@ -39,6 +44,7 @@ function initGUI(~, view)
         'repetition', repetition, ...
         'repetitionCount', repetitionCount, ...
         'plot', NaN, ...
+        'date', date, ...
         'positionPlot', NaN, ...
         'axesImage', axesImage ...
 	);
@@ -66,6 +72,9 @@ function onFileChange(view, model)
         try
             ax = handles.axesImage;
             
+            date = model.file.readPayloadData('ODT', ODT.repetition, 'date', 0);
+            set(handles.date, 'String', date);
+            
             n_m=1.337;
             %         end
             n_s=1.377;
@@ -92,11 +101,13 @@ function onFileChange(view, model)
             if ishandle(view.ODT.plot)
                 delete(view.ODT.plot)
             end
+            set(handles.date, 'String', '');
         end
     else
         if ishandle(view.ODT.plot)
             delete(view.ODT.plot)
         end
+        set(handles.date, 'String', '');
     end
 end
 

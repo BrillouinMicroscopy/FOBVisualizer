@@ -29,12 +29,17 @@ function initGUI(~, view)
     repetitionCount = uicontrol('Parent', parent, 'Style','text','String','0', 'Units', 'normalized',...
                'Position',[0.55,0.885,0.02,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
     
-    uicontrol('Parent', parent, 'Style','text','String','Image type:', 'Units', 'normalized',...
+    uicontrol('Parent', parent, 'Style','text','String','Channel:', 'Units', 'normalized',...
                'Position',[0.34,0.85,0.15,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
     type = uicontrol('Parent', parent, 'Style','text','String','', 'Units', 'normalized',...
                'Position',[0.47,0.85,0.10,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
     
-    axesImage = axes('Parent', parent, 'Position', [0.34 .06 .30 .76]);
+    uicontrol('Parent', parent, 'Style','text','String','Date:', 'Units', 'normalized',...
+               'Position',[0.34,0.815,0.15,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    date = uicontrol('Parent', parent, 'Style','text', 'Units', 'normalized',...
+               'Position',[0.47,0.815,0.19,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left', 'String', '');
+    
+    axesImage = axes('Parent', parent, 'Position', [0.34 .06 .30 .74]);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
              
@@ -46,6 +51,7 @@ function initGUI(~, view)
         'type', type, ...
         'plot', NaN, ...
         'positionPlot', NaN, ...
+        'date', date, ...
         'axesImage', axesImage ...
 	);
 end
@@ -74,6 +80,8 @@ function onFileChange(view, model)
             type = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'channel', 0);
             set(handles.type, 'String', type);
             image = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'data', 0);
+            date = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'date', 0);
+            set(handles.date, 'String', date);
             
             x = 4.8*(1:size(image, 1))/57;
             x = x - nanmean(x(:));
@@ -112,12 +120,14 @@ function onFileChange(view, model)
                 delete(view.Fluorescence.plot)
             end
             set(handles.type, 'String', '');
+            set(handles.date, 'String', '');
         end
     else
         if ishandle(view.Fluorescence.plot)
             delete(view.Fluorescence.plot)
         end
         set(handles.type, 'String', '');
+        set(handles.date, 'String', '');
     end
 end
 
