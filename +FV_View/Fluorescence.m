@@ -31,8 +31,8 @@ function initGUI(~, view)
     
     uicontrol('Parent', parent, 'Style','text','String','Channel:', 'Units', 'normalized',...
                'Position',[0.34,0.85,0.15,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    type = uicontrol('Parent', parent, 'Style','text','String','', 'Units', 'normalized',...
-               'Position',[0.47,0.85,0.10,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    channels = uicontrol('Parent', parent, 'Style','popup', 'Units', 'normalized',...
+               'Position',[0.47,0.875,0.1,0.005], 'FontSize', 11, 'HorizontalAlignment', 'left', 'String', {''}, 'Value', 1);
     
     uicontrol('Parent', parent, 'Style','text','String','Date:', 'Units', 'normalized',...
                'Position',[0.34,0.815,0.15,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
@@ -48,7 +48,7 @@ function initGUI(~, view)
         'parent', parent, ...
         'repetition', repetition, ...
         'repetitionCount', repetitionCount, ...
-        'type', type, ...
+        'channels', channels, ...
         'plot', NaN, ...
         'positionPlot', NaN, ...
         'date', date, ...
@@ -73,14 +73,22 @@ function onFileChange(view, model)
     end
     set(handles.repetition, 'String', reps);
     set(handles.repetition, 'Value', Fluorescence.repetition+1);
-    
+
     if ~isempty(Fluorescence.repetitions)
         try
+            imageNames = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'memberNames');
+            if (Fluorescence.channel >= length(imageNames))
+                Fluorescence.channel = 0;
+            end
+            set(handles.channels, 'String', imageNames);
+            set(handles.channels, 'Value', Fluorescence.channel+1);
+            
             ax = handles.axesImage;
-            type = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'channel', 0);
-            set(handles.type, 'String', type);
-            image = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'data', 0);
-            date = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'date', 0);
+            type = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'channel', Fluorescence.channel);
+            
+            image = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'data', Fluorescence.channel);
+            image = medfilt1(image, 3);
+            date = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'date', Fluorescence.channel);
             set(handles.date, 'String', date);
             
             x = 4.8*(1:size(image, 1))/57;
@@ -122,14 +130,16 @@ function onFileChange(view, model)
             if ishandle(view.Fluorescence.plot)
                 delete(view.Fluorescence.plot)
             end
-            set(handles.type, 'String', '');
+            set(handles.channels, 'String', {''});
+            set(handles.channels, 'Value', 1);
             set(handles.date, 'String', '');
         end
     else
         if ishandle(view.Fluorescence.plot)
             delete(view.Fluorescence.plot)
         end
-        set(handles.type, 'String', '');
+        set(handles.channels, 'String', {''});
+        set(handles.channels, 'Value', 1);
         set(handles.date, 'String', '');
     end
 end
