@@ -31,7 +31,7 @@ function initGUI(~, view)
     date = uicontrol('Parent', parent, 'Style','text','String','', 'Units', 'normalized',...
                'Position',[0.80,0.85,0.19,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
     
-    axesImage = axes('Parent', parent, 'Position', [0.67 .06 .30 .74]);
+    axesImage = axes('Parent', parent, 'Position', [0.69 .46 .26 .34]);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
     
@@ -52,7 +52,7 @@ function initView(view, model)
 end
 
 function onFileChange(view, model)
-    Brillouin =  model.Brillouin;
+    Brillouin = model.Brillouin;
     handles = view.Brillouin;
     reps = Brillouin.repetitions;
     if (isempty(reps))
@@ -68,20 +68,8 @@ function onFileChange(view, model)
         try
             ax = handles.axesImage;
             
-            [~, name, ~] = fileparts(model.filename);
-            if length(Brillouin.repetitions) > 1
-                name = [name '_rep' num2str(Brillouin.repetition)];
-            end
-            filepath = [model.filepath '..\EvalData\' name '.mat'];
-            data = load(filepath, 'results');
-            
-            date = model.file.readPayloadData('Brillouin', Brillouin.repetition, 'date', 0);
-            set(handles.date, 'String', date);
-            
-            BS = nanmean(data.results.results.BrillouinShift_frequency, 4);
-            positions.x = data.results.parameters.positions.X;
-            positions.y = data.results.parameters.positions.Y;
-            positions.z = data.results.parameters.positions.Z;
+            BS = nanmean(Brillouin.shift, 4);
+            positions = Brillouin.positions;
             
             dimensions = size(BS);
             dimension = sum(dimensions > 1);
@@ -102,6 +90,7 @@ function onFileChange(view, model)
                     sdims{sind} = dims{jj};
                 end
             end
+            Brillouin.nsdims = nsdims;
             
             if ishandle(view.Brillouin.plot)
                 delete(view.Brillouin.plot)
@@ -163,6 +152,7 @@ function onFileChange(view, model)
         end
         set(handles.date, 'String', '');
     end
+    model.Brillouin = Brillouin;
 end
 
 function onFOVChange(view, model)

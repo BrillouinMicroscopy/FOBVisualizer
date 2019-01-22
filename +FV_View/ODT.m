@@ -17,7 +17,7 @@ function ODT(view, model)
         @(o,e) onBrillouinChange(view, e.AffectedObject));
 end
 
-function initGUI(~, view)
+function initGUI(model, view)
     parent = view.ODT.parent;
     
     uicontrol('Parent', parent, 'Style','text','String','ODT repetition:', 'Units', 'normalized',...
@@ -34,7 +34,22 @@ function initGUI(~, view)
     date = uicontrol('Parent', parent, 'Style','text','String','', 'Units', 'normalized',...
                'Position',[0.14,0.85,0.19,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
     
-    axesImage = axes('Parent', parent, 'Position', [0.01 .06 .30 .74]);
+    maxProj = uicontrol('Parent', parent, 'Style', 'checkbox', 'Units', 'normalized',...
+        'Position', [0.06,0.815,0.01,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left', 'tag', 'Borders', 'value', model.ODT.maxProj);
+    
+    uicontrol('Parent', parent, 'Style', 'text', 'String', 'Max. proj.:', 'Units', 'normalized',...
+        'Position', [0.01,0.815,0.05,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
+           
+    uicontrol('Parent', parent, 'Style','text','String', 'z [µm]:', 'Units', 'normalized',...
+               'Position',[0.08,0.815,0.05,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    
+    zDepth = javax.swing.JSlider;
+    zDepth.setEnabled(~model.ODT.maxProj);
+    javacomponent(zDepth, [160, 645, 260,35], parent);
+    set(zDepth, 'MajorTickSpacing', 2, 'PaintLabels', true, 'PaintTicks', true, 'Minimum', -10, 'Maximum', 10);
+    zDepth.setValue(model.ODT.zDepth);
+    
+    axesImage = axes('Parent', parent, 'Position', [0.03 .46 .26 .34]);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
     
@@ -43,8 +58,10 @@ function initGUI(~, view)
         'parent', parent, ...
         'repetition', repetition, ...
         'repetitionCount', repetitionCount, ...
+        'maxProj', maxProj, ...
         'plot', NaN, ...
         'date', date, ...
+        'zDepth', zDepth, ...
         'positionPlot', NaN, ...
         'axesImage', axesImage ...
 	);
@@ -68,34 +85,41 @@ function onFileChange(view, model)
     set(handles.repetition, 'String', reps);
     set(handles.repetition, 'Value', ODT.repetition+1);
     
+    set(handles.maxProj, 'Value', ODT.maxProj);
+    set(handles.zDepth, 'Enabled', ~ODT.maxProj);
+    
     if ~isempty(ODT.repetitions)
         try
             ax = handles.axesImage;
             
-            date = model.file.readPayloadData('ODT', ODT.repetition, 'date', 0);
-            set(handles.date, 'String', date);
+            set(handles.date, 'String', ODT.date);
+            
+            positions = ODT.positions;
             
             n_m=1.337;
             %         end
             n_s=1.377;
             
-            [~, name, ~] = fileparts(model.filename);
-            if length(ODT.repetitions) > 1
-                name = [name '_rep' num2str(ODT.repetition+1)];
-            end
-            filepath = [model.filepath '..\EvalData\Tomogram_Field_' name '.h5.mat.mat'];
-            data = load(filepath, 'Reconimg', 'res3', 'res4');
-            
-            ZP4=round(size(data.Reconimg,1));
             if ishandle(view.ODT.plot)
                 delete(view.ODT.plot)
             end
-            view.ODT.plot = imagesc(ax, ((1:ZP4)-ZP4/2)*data.res3,((1:ZP4)-ZP4/2)*data.res3,max(real(data.Reconimg),[],3),[n_m-0.005 n_s]);
+            
+            if (ODT.maxProj)
+                slice = max(real(ODT.data.Reconimg), [], 3);
+            else
+                z = squeeze(positions.z(1, 1, :));
+                [~, zInd] = min(abs(z - model.ODT.zDepth));
+                clear z;
+                slice = ODT.data.Reconimg(:, :, zInd);
+            end
+            
+            view.ODT.plot = imagesc(ax, positions.x(1,:,1), positions.y(:,1,1), slice);
             axis(ax, 'equal');
             xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
             ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
             colormap(ax, 'jet');
             colorbar(ax);
+            caxis(ax, [n_m-0.005 n_s]);
             set(ax, 'yDir', 'normal');
 %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
             onFOVChange(view, model);

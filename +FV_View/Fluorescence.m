@@ -39,7 +39,7 @@ function initGUI(~, view)
     date = uicontrol('Parent', parent, 'Style','text', 'Units', 'normalized',...
                'Position',[0.47,0.815,0.19,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left', 'String', '');
     
-    axesImage = axes('Parent', parent, 'Position', [0.34 .06 .30 .74]);
+    axesImage = axes('Parent', parent, 'Position', [0.36 .46 .26 .34]);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
              

@@ -7,6 +7,7 @@ classdef View < handle
         ODT;
         Fluorescence;
         Brillouin;
+        Modulus
         help;
         figure;
         menubar;

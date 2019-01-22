@@ -80,6 +80,9 @@ function openFile(model, filePath)
         model.ODT = ODT;
         
         H5F.close(file);
+        
+        model.controllers.Brillouin.loadRepetition();
+        model.controllers.ODT.loadRepetition();
     end
 end
         
