@@ -94,7 +94,8 @@ function onFileChange(view, model)
                     xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
                     ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
         %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
-                    colorbar(ax);
+                    cb = colorbar(ax);
+                    ylabel(cb, '$M''$ [GPa]', 'interpreter', 'latex');
                     set(ax, 'yDir', 'normal');
                 case 3
             end

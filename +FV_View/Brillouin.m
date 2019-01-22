@@ -122,7 +122,8 @@ function onFileChange(view, model)
                     xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
                     ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
         %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
-                    colorbar(ax);
+                    cb = colorbar(ax);
+                    ylabel(cb, '$\nu$ [GHz]', 'interpreter', 'latex');
                     set(ax, 'yDir', 'normal');
 
                     %% Extract positions to show in ODT and Fluorescence

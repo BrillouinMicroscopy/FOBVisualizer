@@ -118,7 +118,8 @@ function onFileChange(view, model)
             xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
             ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
             colormap(ax, 'jet');
-            colorbar(ax);
+            cb = colorbar(ax);
+            ylabel(cb, '$n$', 'interpreter', 'latex');
             caxis(ax, [n_m-0.005 n_s]);
             set(ax, 'yDir', 'normal');
 %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');

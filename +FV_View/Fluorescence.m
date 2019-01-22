@@ -105,7 +105,8 @@ function onFileChange(view, model)
             xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
             ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
             caxis(ax, [min(image(:)), max(image(:))]);
-            colorbar(ax);
+            cb = colorbar(ax);
+            ylabel(cb, '$I$ [a.u.]', 'interpreter', 'latex');
             switch (type)
                 case 'Brightfield'
                     colormap(ax, 'gray')
