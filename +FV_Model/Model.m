@@ -12,6 +12,7 @@ classdef Model < handle
         parameters;         % general parameters
         Brillouin;          % parameters of the Brillouin measurement
         Fluorescence;       % parameters of the Fluorescence measurement
+        modulus;            % parameters of the longitudinal modulus calculation
         ODT;                % parameters of the ODT measurement
     end
     properties (Constant)
@@ -58,6 +59,11 @@ classdef Model < handle
                 'z', [] ...
             ) ...
         );
+        defaultModulus = struct( ...
+            'n0', 1.335, ...        % [1]    refractive index of PBS
+            'alpha', 0.18, ...      % [ml/g] refraction increment
+            'rho0', 1 ...           % [g/ml] density of PBS
+        );
         defaultParameters = struct( ...
             'magnification', 57, ...    % [1]   microscope magnification
             'pixelSize', 4.8e-6, ...    % [µm]  camera pixel size
@@ -71,6 +77,7 @@ classdef Model < handle
             obj.Brillouin = obj.defaultBrillouin();
             obj.Fluorescence = obj.defaultFluorescence();
             obj.ODT = obj.defaultODT();
+            obj.modulus = obj.defaultModulus();
             obj.parameters = obj.defaultParameters();
         end
         %% Function to reset the model

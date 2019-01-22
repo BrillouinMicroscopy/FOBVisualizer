@@ -39,6 +39,7 @@ end
 function onFileChange(view, model)
     Brillouin =  model.Brillouin;
     ODT =  model.ODT;
+    modulus =  model.modulus;
     handles = view.Modulus;
     
     if ~(isempty(Brillouin.repetitions) || isempty(ODT.repetitions))
@@ -56,13 +57,8 @@ function onFileChange(view, model)
                 RI = interp3(ODT.positions.x, ODT.positions.y, ODT.positions.z, ODT.data.Reconimg, positions.x, positions.y, ODT.zDepth*ones(size(positions.z)));
             end
             
-            
-            n0 = 1.335;         % [1]    refractive index of PBS
-            alpha = 0.18;       % [ml/g] refraction increment
-            rho0 = 1;           % [g/ml] density of PBS
-            
             % calculate density
-            rho = (RI - n0)/alpha + rho0;
+            rho = (RI - modulus.n0)/modulus.alpha + modulus.rho0;
             rho = 1e3*rho;      % [kg/m^3]  density of the sample
             
             zeta = (2*cos(Brillouin.setup.theta/2) * RI) ./ (Brillouin.setup.lambda * sqrt(rho));
