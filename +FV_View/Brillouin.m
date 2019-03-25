@@ -137,6 +137,7 @@ function onFileChange(view, model)
                     Brillouin.position.y = yPos;
                 case 3
             end
+            set(handles.date, 'String', Brillouin.date);
             
             model.Brillouin = Brillouin;
             %% Update field of view
