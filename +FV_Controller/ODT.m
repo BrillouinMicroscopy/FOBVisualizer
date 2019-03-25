@@ -27,7 +27,7 @@ function loadRepetition(model, view, repetition)
         try
             [~, name, ~] = fileparts(model.filename);
             if length(ODT.repetitions) > 1
-                name = [name '_rep' num2str(ODT.repetition+1)];
+                name = [name '_rep' num2str(ODT.repetition)];
             end
             filepath = [model.filepath '..\EvalData\Tomogram_Field_' name '.h5.mat.mat'];
             ODT.data = load(filepath, 'Reconimg', 'res3', 'res4');
