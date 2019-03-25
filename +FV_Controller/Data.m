@@ -58,25 +58,25 @@ function openFile(model, filePath)
         % Brillouin
         Brillouin = model.Brillouin;
         gid = H5G.open(file,'/Brillouin');
-        Brillouin.repetitions = {};
-        [~, ~, Brillouin] = H5L.iterate(gid, 'H5_INDEX_NAME' , 'H5_ITER_INC', 0, @addBrillouinRepetition, Brillouin);
+        [~, ~, repetitions] = H5L.iterate(gid, 'H5_INDEX_NAME' , 'H5_ITER_INC', 0, @addRepetition, {});
         H5G.close(gid);
+        Brillouin.repetitions = repetitions;
         model.Brillouin = Brillouin;
         
         % Fluorescence
         Fluorescence = model.Fluorescence;
         gid = H5G.open(file,'/Fluorescence');
-        Fluorescence.repetitions = {};
-        [~, ~, Fluorescence] = H5L.iterate(gid, 'H5_INDEX_NAME' , 'H5_ITER_INC', 0, @addFluorescenceRepetition, Fluorescence);
+        [~, ~, repetitions] = H5L.iterate(gid, 'H5_INDEX_NAME' , 'H5_ITER_INC', 0, @addRepetition, {});
         H5G.close(gid);
+        Fluorescence.repetitions = repetitions;
         model.Fluorescence = Fluorescence;
         
         % ODT
         ODT = model.ODT;
         gid = H5G.open(file,'/ODT');
-        ODT.repetitions = {};
-        [~, ~, ODT] = H5L.iterate(gid, 'H5_INDEX_NAME' , 'H5_ITER_INC', 0, @addODTRepetition, ODT);
+        [~, ~, repetitions] = H5L.iterate(gid, 'H5_INDEX_NAME' , 'H5_ITER_INC', 0, @addRepetition, {});
         H5G.close(gid);
+        ODT.repetitions = repetitions;
         model.ODT = ODT;
         
         H5F.close(file);
@@ -85,22 +85,11 @@ function openFile(model, filePath)
         model.controllers.ODT.loadRepetition();
     end
 end
-        
-function [status, Brillouin] = addBrillouinRepetition(~, name, Brillouin)
+
+%%
+function [status, memberNames] = addRepetition(~, memberName, memberNames)
     %% Add group to array of repetitions
-    Brillouin.repetitions{length(Brillouin.repetitions)+1} = name;
-    status = 0;
-end
-        
-function [status, Fluorescence] = addFluorescenceRepetition(~, name, Fluorescence)
-    %% Add group to array of repetitions
-    Fluorescence.repetitions{length(Fluorescence.repetitions)+1} = name;
-    status = 0;
-end
-        
-function [status, ODT] = addODTRepetition(~, name, ODT)
-    %% Add group to array of repetitions
-    ODT.repetitions{length(ODT.repetitions)+1} = name;
+    memberNames{length(memberNames)+1} = memberName;
     status = 0;
 end
 
