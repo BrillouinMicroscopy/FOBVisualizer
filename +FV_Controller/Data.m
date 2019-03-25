@@ -51,35 +51,15 @@ function openFile(model, filePath)
         end
         model.parameters = parameters;
         
-        %% Open the raw data file
-        file = H5F.open(filePath);
-        
         %% Find all measurements for Brillouin, Fluorescence and ODT
         % Brillouin
-        Brillouin = model.Brillouin;
-        gid = H5G.open(file,'/Brillouin');
-        [~, ~, repetitions] = H5L.iterate(gid, 'H5_INDEX_NAME' , 'H5_ITER_INC', 0, @addRepetition, {});
-        H5G.close(gid);
-        Brillouin.repetitions = repetitions;
-        model.Brillouin = Brillouin;
+        model.Brillouin.repetitions = model.file.getRepetitions('Brillouin');
         
         % Fluorescence
-        Fluorescence = model.Fluorescence;
-        gid = H5G.open(file,'/Fluorescence');
-        [~, ~, repetitions] = H5L.iterate(gid, 'H5_INDEX_NAME' , 'H5_ITER_INC', 0, @addRepetition, {});
-        H5G.close(gid);
-        Fluorescence.repetitions = repetitions;
-        model.Fluorescence = Fluorescence;
+        model.Fluorescence.repetitions = model.file.getRepetitions('Fluorescence');
         
         % ODT
-        ODT = model.ODT;
-        gid = H5G.open(file,'/ODT');
-        [~, ~, repetitions] = H5L.iterate(gid, 'H5_INDEX_NAME' , 'H5_ITER_INC', 0, @addRepetition, {});
-        H5G.close(gid);
-        ODT.repetitions = repetitions;
-        model.ODT = ODT;
-        
-        H5F.close(file);
+        model.ODT.repetitions = model.file.getRepetitions('ODT');
         
         model.controllers.Brillouin.loadRepetition();
         model.controllers.ODT.loadRepetition();
