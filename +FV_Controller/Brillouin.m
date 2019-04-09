@@ -11,7 +11,8 @@ end
 
 function selectRepetition(src, ~, model)
     val = get(src, 'Value');
-    repetition = val - 1;
+    repetition.index = val;
+    repetition.name = model.Brillouin.repetitions{val};
     
     loadRepetition(model, repetition);
 end
@@ -24,12 +25,12 @@ function loadRepetition(model, repetition)
         try
             [~, name, ~] = fileparts(model.filename);
             if length(Brillouin.repetitions) > 1
-                name = [name '_rep' num2str(Brillouin.repetition)];
+                name = [name '_rep' num2str(Brillouin.repetition.name)];
             end
             filepath = [model.filepath '..\EvalData\' name '.mat'];
             data = load(filepath, 'results');
             
-            Brillouin.date = model.file.readPayloadData('Brillouin', Brillouin.repetition, 'date', 0);
+            Brillouin.date = model.file.readPayloadData('Brillouin', Brillouin.repetition.name, 'date', 0);
             
             Brillouin.shift = data.results.results.BrillouinShift_frequency;
             Brillouin.positions.x = data.results.parameters.positions.X;

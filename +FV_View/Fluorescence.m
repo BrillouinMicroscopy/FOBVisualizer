@@ -72,11 +72,11 @@ function onFileChange(view, model)
         set(handles.repetitionCount, 'String', length(reps));
     end
     set(handles.repetition, 'String', reps);
-    set(handles.repetition, 'Value', Fluorescence.repetition+1);
+    set(handles.repetition, 'Value', Fluorescence.repetition.index);
 
     if ~isempty(Fluorescence.repetitions)
         try
-            imageNames = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'memberNames');
+            imageNames = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'memberNames');
             if (Fluorescence.channel >= length(imageNames))
                 Fluorescence.channel = 0;
             end
@@ -84,11 +84,11 @@ function onFileChange(view, model)
             set(handles.channels, 'Value', Fluorescence.channel+1);
             
             ax = handles.axesImage;
-            type = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'channel', Fluorescence.channel);
+            type = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'channel', Fluorescence.channel);
             
-            image = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'data', Fluorescence.channel);
+            image = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'data', Fluorescence.channel);
             image = medfilt1(image, 3);
-            date = model.file.readPayloadData('Fluorescence', Fluorescence.repetition, 'date', Fluorescence.channel);
+            date = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'date', Fluorescence.channel);
             set(handles.date, 'String', date);
             
             x = 4.8*(1:size(image, 1))/57;

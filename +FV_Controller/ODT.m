@@ -14,7 +14,8 @@ end
 
 function selectRepetition(src, ~, model, view)
     val = get(src, 'Value');
-    repetition = val - 1;
+    repetition.index = val;
+    repetition.name = model.ODT.repetitions{val};
     
     loadRepetition(model, view, repetition);
 end
@@ -27,12 +28,12 @@ function loadRepetition(model, view, repetition)
         try
             [~, name, ~] = fileparts(model.filename);
             if length(ODT.repetitions) > 1
-                name = [name '_rep' num2str(ODT.repetition)];
+                name = [name '_rep' num2str(ODT.repetition.name)];
             end
             filepath = [model.filepath '..\EvalData\Tomogram_Field_' name '.h5.mat.mat'];
             ODT.data = load(filepath, 'Reconimg', 'res3', 'res4');
 
-            ODT.date = model.file.readPayloadData('ODT', ODT.repetition, 'date', 0);
+            ODT.date = model.file.readPayloadData('ODT', ODT.repetition.name, 'date', 0);
             
             ZP4=round(size(ODT.data.Reconimg,1));
             x = ((1:ZP4)-ZP4/2)*ODT.data.res3;

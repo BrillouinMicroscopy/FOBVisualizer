@@ -11,7 +11,9 @@ end
 
 function selectRepetition(src, ~, model)
     val = get(src, 'Value');
-    model.Fluorescence.repetition = val - 1;
+    repetition.index = val;
+    repetition.name = model.Fluorescence.repetitions{val};
+    model.Fluorescence.repetition = repetition;
 end
 
 function selectChannel(src, ~, model)

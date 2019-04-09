@@ -83,7 +83,7 @@ function onFileChange(view, model)
         set(handles.repetitionCount, 'String', length(reps));
     end
     set(handles.repetition, 'String', reps);
-    set(handles.repetition, 'Value', ODT.repetition+1);
+    set(handles.repetition, 'Value', ODT.repetition.index);
     
     set(handles.maxProj, 'Value', ODT.maxProj);
     set(handles.zDepth, 'Enabled', ~ODT.maxProj);

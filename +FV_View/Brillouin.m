@@ -62,7 +62,7 @@ function onFileChange(view, model)
         set(handles.repetitionCount, 'String', length(reps));
     end
     set(handles.repetition, 'String', reps);
-    set(handles.repetition, 'Value', Brillouin.repetition+1);
+    set(handles.repetition, 'Value', Brillouin.repetition.index);
     
     if ~isempty(Brillouin.repetitions)
         try
