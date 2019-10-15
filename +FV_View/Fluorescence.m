@@ -107,18 +107,19 @@ function onFileChange(view, model)
             caxis(ax, [min(image(:)), max(image(:))]);
             cb = colorbar(ax);
             ylabel(cb, '$I$ [a.u.]', 'interpreter', 'latex');
+            type = lower(type);
             switch (type)
-                case 'Brightfield'
+                case 'brightfield'
                     colormap(ax, 'gray')
-                case 'Green'
+                case 'green'
                     greenColor=zeros(64,3);
                     greenColor(:,2)=linspace(0,1,64);
                     colormap(ax, greenColor);
-                case 'Red'
+                case 'red'
                     redColor=zeros(64,3);
                     redColor(:,1)=linspace(0,1,64);
                     colormap(ax, redColor);
-                case 'Blue'
+                case 'blue'
                     blueColor=zeros(64,3);
                     blueColor(:,3)=linspace(0,1,64);
                     colormap(ax, blueColor);
