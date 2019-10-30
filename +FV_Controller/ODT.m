@@ -30,7 +30,7 @@ function loadRepetition(model, view, repetition)
             if length(ODT.repetitions) > 1
                 name = [name '_rep' num2str(ODT.repetition.name)];
             end
-            filepath = [model.filepath '..\EvalData\Tomogram_Field_' name '.mat'];
+            filepath = [model.filepath '..' filesep 'EvalData' filesep 'Tomogram_Field_' name '.mat'];
             ODT.data = load(filepath, 'Reconimg', 'res3', 'res4');
 
             ODT.date = model.file.readPayloadData('ODT', ODT.repetition.name, 'date', 0);

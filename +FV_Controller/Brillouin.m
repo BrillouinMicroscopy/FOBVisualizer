@@ -27,7 +27,7 @@ function loadRepetition(model, repetition)
             if length(Brillouin.repetitions) > 1
                 name = [name '_rep' num2str(Brillouin.repetition.name)];
             end
-            filepath = [model.filepath '..\EvalData\' name '.mat'];
+            filepath = [model.filepath '..' filesep 'EvalData' filesep name '.mat'];
             data = load(filepath, 'results');
             
             Brillouin.date = model.file.readPayloadData('Brillouin', Brillouin.repetition.name, 'date', 0);

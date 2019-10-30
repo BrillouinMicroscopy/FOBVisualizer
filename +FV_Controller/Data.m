@@ -29,7 +29,7 @@ function openFile(model, filePath)
         return
     end
     [PathName, name, extension] = fileparts(filePath);
-    model.filepath = [PathName '\'];
+    model.filepath = [PathName filesep];
     if ~isequal(PathName,0) && exist(filePath, 'file')
         
         %% Store file handle

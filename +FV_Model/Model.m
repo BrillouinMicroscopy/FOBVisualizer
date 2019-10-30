@@ -107,15 +107,22 @@ function programVersion = getProgramVersion()
     fp = mfilename('fullpath');
     [path,~,~] = fileparts(fp);
     try
-        [status,com] = system(['git -C "' path '" log -n 1 --format=format:%H']);
-        if ~status
-            commit = com;
-        end
-        [status,clean] = system(['git -C "' path '" ls-files --exclude-standard -d -m -o -k']);
-        if ~status
-            cleanRepo = isempty(clean);
+        if ispc
+            [status,com] = system(['git -C "' path '" log -n 1 --format=format:%H']);
+            if ~status
+                commit = com;
+            end
+            [status,clean] = system(['git -C "' path '" ls-files --exclude-standard -d -m -o -k']);
+            if ~status
+                cleanRepo = isempty(clean);
+            end
+        else
+            commit = 'Could not determine commit.';
+            cleanRepo = 'unknown';
         end
     catch
+        commit = 'Could not determine commit.';
+        cleanRepo = 'unknown';
         % program folder does not contain git folder
     end
 
