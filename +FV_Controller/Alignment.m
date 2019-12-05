@@ -108,11 +108,34 @@ function start(~, ~, view, model)
                     end
                     
                     [~, indZ] = max(corrMaxVal(:));
-                    [indX, indY] = ind2sub(size(corrVal), corrMaxInd(indZ));
                     
+                    %% Find more exact x-y-alignment
+                    % we have to interpolate RI and BS in order to get a
+                    % better alignment
+                    intFac = 5; % interpolation factor
+                    x_int = linspace(min(positions.x(:)), max(positions.x(:)), intFac * size(positions.x, 2));
+                    y_int = linspace(min(positions.y(:)), max(positions.y(:)), intFac * size(positions.y, 1));
+                    [X_int, Y_int] = meshgrid(x_int, y_int);
+                    
+                    BS_int = interp2(positions.x(:,:,1), positions.y(:,:,1), BS, X_int, Y_int);
+                    [BS_int_dx, BS_int_dy] = gradient(BS_int);
+                    BS_int_grad = sqrt(BS_int_dx.^2 + BS_int_dy.^2);
+                    
+                    RI = mean(ODT.data.Reconimg(:,:, (0:round(BMZres/ODT.data.res4)) + indZ), 3);
+                    RI_int = interp2(ODT.positions.x(:,:,1), ODT.positions.y(:,:,1), RI, X_int, Y_int);
+                    [RI_int_dx, RI_int_dy] = gradient(RI_int);
+                    RI_int_grad = sqrt(RI_int_dx.^2 + RI_int_dy.^2);
+                    
+                    corrVal = xcorr2(BS_int_grad, RI_int_grad);
+                    [~, ind] = max(corrVal(:));
+                    [indX, indY] = ind2sub(size(corrVal), ind);
+                    
+                    %% Save values
                     temporary = model.temporary;
-                    temporary.Alignment.dx_tmp = (indX - (size(BS_int_zm_grad, 1) + size(RI_grad, 1)) / 2) * ODT.data.res3;
-                    temporary.Alignment.dy_tmp = (indY - (size(BS_int_zm_grad, 2) + size(RI_grad, 2)) / 2) * ODT.data.res3;
+                    temporary.Alignment.dx_tmp = -1 * (indY - (size(BS_int_grad, 2) + size(RI_int_grad, 2)) / 2) * ...
+                        (Y_int(2,1) - Y_int(1,1));
+                    temporary.Alignment.dy_tmp = -1 * (indX - (size(BS_int_grad, 1) + size(RI_int_grad, 1)) / 2) * ...
+                        (X_int(1,2) - X_int(1,1));
                     temporary.Alignment.dz_tmp = (indZ - size(zetts, 2)/2) * ODT.data.res4;
                     set(view.Alignment.dx, 'String', temporary.Alignment.dx_tmp);
                     set(view.Alignment.dy, 'String', temporary.Alignment.dy_tmp);
