@@ -108,11 +108,11 @@ function start(~, ~, view, model)
                     end
                     
                     [~, indZ] = max(corrMaxVal(:));
-                    [indX, indY] = ind2sub(size(corrVal), corrMaxInd(indZ)); 
+                    [indX, indY] = ind2sub(size(corrVal), corrMaxInd(indZ));
                     
                     temporary = model.temporary;
-                    temporary.Alignment.dx_tmp = (indX - (size(BS_int_zm, 1) + size(Reconimgtemp, 1)) / 2) * ODT.data.res3;
-                    temporary.Alignment.dy_tmp = (indY - (size(BS_int_zm, 2) + size(Reconimgtemp, 2)) / 2) * ODT.data.res3;
+                    temporary.Alignment.dx_tmp = (indX - (size(BS_int_zm_grad, 1) + size(RI_grad, 1)) / 2) * ODT.data.res3;
+                    temporary.Alignment.dy_tmp = (indY - (size(BS_int_zm_grad, 2) + size(RI_grad, 2)) / 2) * ODT.data.res3;
                     temporary.Alignment.dz_tmp = (indZ - size(zetts, 2)/2) * ODT.data.res4;
                     set(view.Alignment.dx, 'String', temporary.Alignment.dx_tmp);
                     set(view.Alignment.dy, 'String', temporary.Alignment.dy_tmp);
