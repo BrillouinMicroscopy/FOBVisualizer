@@ -63,8 +63,8 @@ function start(~, ~, view, model)
                     x = ((1:ZP4)-ZP4/2)*ODT.data.res3;
                     y = x;
 
-                    ZP5 = round(size(ODT.data.Reconimg,3));
-                    z = ((1:ZP5)-ZP5/2)*ODT.data.res4;
+%                     ZP5 = round(size(ODT.data.Reconimg,3));
+%                     z = ((1:ZP5)-ZP5/2)*ODT.data.res4;
 
                     [X, Y] = meshgrid(x, y);
                     
@@ -121,7 +121,7 @@ function start(~, ~, view, model)
     end
 end
 
-function save(~, ~, view, model)
+function save(~, ~, ~, model)
     %% save data here
     Alignment = model.Alignment;
     if isfield(model.temporary.Alignment, 'dx_tmp')
@@ -134,21 +134,9 @@ function save(~, ~, view, model)
         Alignment.dz = model.temporary.Alignment.dz_tmp;
     end
     model.Alignment = Alignment;
-%     %% close alignment window
-%     closeAlignment(0, 0, model, view);
 end
 
-function closeAlignment(~, ~, model, view)
-%     %% delete temporary values
-%     if isfield(model.temporary.Alignment, 'dx_tmp')
-%         model.Alignment = rmfield(model.Alignment, 'dx_tmp');
-%     end
-%     if isfield(model.temporary.Alignment, 'dy_tmp')
-%         model.Alignment = rmfield(model.Alignment, 'dy_tmp');
-%     end
-%     if isfield(model.temporary.Alignment, 'dz_tmp')
-%         model.Alignment = rmfield(model.Alignment, 'dz_tmp');
-%     end
+function closeAlignment(~, ~, ~, view)
     close(view.Alignment.parent);
 end
 
