@@ -78,6 +78,9 @@ function start(~, ~, view, model)
                     BS_int = BS_int(min(tempX):max(tempX), min(tempY):max(tempY));                      % select interpolated BS maps matching with BS FOV
                     BS_int_zm = BS_int - mean2(BS_int);
                     
+                    [BS_int_zm_dx, BS_int_zm_dy] = gradient(BS_int_zm);
+                    BS_int_zm_grad = sqrt(BS_int_zm_dx.^2 + BS_int_zm_dy.^2);
+                    
                     %% Actual correlation
                     corrMaxVal = NaN(size(ODT.data.Reconimg, 3) - round(BMZres/ODT.data.res4), 1);
                     corrMaxInd = NaN(size(ODT.data.Reconimg, 3) - round(BMZres/ODT.data.res4), 1);
@@ -85,8 +88,11 @@ function start(~, ~, view, model)
                     zetts = 1:(size(ODT.data.Reconimg, 3) - round(BMZres/ODT.data.res4));
                     for z = zetts
                         testVol = mean(Reconimgtemp(:,:, (0:round(BMZres/ODT.data.res4)) + z), 3);                   % averaged RI map in the focal volume
-                        testVol = testVol - mean2(testVol);
-                        corrVal = xcorr2(testVol, BS_int_zm); % calculate the cross-correlation
+                        
+                        [RI_dx, RI_dy] = gradient(testVol);
+                        RI_grad = sqrt(RI_dx.^2 + RI_dy.^2);
+                        
+                        corrVal = xcorr2(RI_grad, BS_int_zm_grad); % calculate the cross-correlation
                         [corrMaxVal(z), corrMaxInd(z)] = max(corrVal(:));
                         
                         view.Alignment.ODT_plot = imagesc(view.Alignment.ODT, testVol);
