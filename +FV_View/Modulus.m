@@ -13,6 +13,9 @@ function Modulus(view, model)
     addlistener(model, 'ODT', 'PostSet', ...
         @(o,e) onFileChange(view, e.AffectedObject));
     
+    addlistener(model, 'Alignment', 'PostSet', ...
+        @(o,e) onFileChange(view, e.AffectedObject));
+    
     addlistener(model, 'parameters', 'PostSet', ...
         @(o,e) onFOVChange(view, e.AffectedObject));
 end
@@ -39,6 +42,7 @@ end
 function onFileChange(view, model)
     Brillouin =  model.Brillouin;
     ODT =  model.ODT;
+    Alignment =  model.Alignment;
     modulus =  model.modulus;
     handles = view.Modulus;
     
@@ -50,12 +54,8 @@ function onFileChange(view, model)
             
             BS = nanmean(Brillouin.shift, 4);
             
-            
-            if (ODT.maxProj)
-                RI = interp2(ODT.positions.x(:,:,1), ODT.positions.y(:,:,1), max(real(ODT.data.Reconimg), [], 3), positions.x(:,:,1), positions.y(:,:,1));
-            else
-                RI = interp3(ODT.positions.x, ODT.positions.y, ODT.positions.z, ODT.data.Reconimg, positions.x, positions.y, ODT.zDepth*ones(size(positions.z)));
-            end
+            RI = interp3(ODT.positions.x, ODT.positions.y, ODT.positions.z, ODT.data.Reconimg, ...
+                Alignment.dx + positions.x, Alignment.dy + positions.y, Alignment.dz + positions.z);
             
             % calculate density
             rho = (RI - modulus.n0)/modulus.alpha + modulus.rho0;
@@ -81,9 +81,9 @@ function onFileChange(view, model)
                 case 2
                     %% two dimensional case
                     d = 1e-9*squeeze(modulus);
-                    pos.x = squeeze(positions.x);
-                    pos.y = squeeze(positions.y);
-                    pos.z = squeeze(positions.z);
+                    pos.x = squeeze(positions.x) + Alignment.dx;
+                    pos.y = squeeze(positions.y) + Alignment.dy;
+                    pos.z = squeeze(positions.z) + Alignment.dz;
                     
                     view.Modulus.plot = imagesc(ax, pos.(Brillouin.nsdims{2})(1,:), pos.(Brillouin.nsdims{1})(:,1), d);
                     axis(ax, 'equal');

@@ -6,6 +6,8 @@ function callbacks = Data(model, view)
     set(view.menubar.fileClose, 'Callback', {@closeFile, model});
     set(view.menubar.fileSave, 'Callback', {@selectSaveData, model});
 
+    set(view.menubar.openAlignment, 'Callback', {@openAlignment, view, model});
+
     callbacks = struct( ...
         'open', @(filePath)openFile(model, filePath), ...
         'closeFile', @()closeFile('', '', model) ...
@@ -82,4 +84,21 @@ function closeFile(~, ~, model)
 end
 
 function selectSaveData(~, ~, model)
+end
+
+function openAlignment(~, ~, view, model)    
+    if isfield(view.Alignment, 'parent') && ishandle(view.Alignment.parent)
+        figure(view.Alignment.parent);
+        return;
+    else
+        % open it centered over main figure
+        pos = view.figure.Position;
+        parent = figure('Position', [pos(1) + pos(3)/2 - 450, pos(2) + pos(4)/2 - 325, 900, 650]);
+        % hide the menubar and prevent resizing
+        set(parent, 'menubar', 'none', 'Resize','off', 'units', 'pixels');
+    end
+
+    view.Alignment = FV_View.Alignment(parent, model);
+
+    FV_Controller.Alignment(model, view);
 end

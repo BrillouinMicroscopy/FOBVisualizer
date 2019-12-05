@@ -11,6 +11,7 @@ classdef View < handle
         help;
         figure;
         menubar;
+        Alignment
     end
 
     methods

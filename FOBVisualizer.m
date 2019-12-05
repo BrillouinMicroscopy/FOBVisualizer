@@ -38,6 +38,10 @@ function varargout = FOBVisualizer
 end
 
 function closeGUI(~, ~, model, view, controllers)
+    if isfield(view.Alignment, 'parent') && ishandle(view.Alignment.parent)
+        close(view.Alignment.parent);
+        delete(view.Alignment.parent);
+    end
     controllers.data.closeFile();
     model.log.write('=====================================================');
     model.log.log('V/FOBVisualizer: Closed program.');

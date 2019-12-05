@@ -10,6 +10,9 @@ function Brillouin(view, model)
     addlistener(model, 'Brillouin', 'PostSet', ...
         @(o,e) onFileChange(view, e.AffectedObject));
     
+    addlistener(model, 'Alignment', 'PostSet', ...
+        @(o,e) onAlignment(view, e.AffectedObject));
+    
     addlistener(model, 'parameters', 'PostSet', ...
         @(o,e) onFOVChange(view, e.AffectedObject));
 end
@@ -53,6 +56,7 @@ end
 
 function onFileChange(view, model)
     Brillouin = model.Brillouin;
+    Alignment = model.Alignment;
     handles = view.Brillouin;
     reps = Brillouin.repetitions;
     if (isempty(reps))
@@ -91,6 +95,9 @@ function onFileChange(view, model)
                 end
             end
             Brillouin.nsdims = nsdims;
+            if model.Brillouin.dimension ~= dimension
+                model.Brillouin = Brillouin;
+            end
             
             if ishandle(view.Brillouin.plot)
                 delete(view.Brillouin.plot)
@@ -107,15 +114,15 @@ function onFileChange(view, model)
 
                     %% Extract positions to show in ODT and Fluorescence
                     xPos = nanmean(positions.(sdims{2})(:));
-                    Brillouin.position.x = xPos;
+                    Alignment.position.x = xPos;
                     yPos = nanmean(positions.(sdims{1})(:));
-                    Brillouin.position.y = yPos;
+                    Alignment.position.y = yPos;
                 case 2
                     %% two dimensional case
                     d = squeeze(BS);
-                    pos.x = squeeze(positions.x);
-                    pos.y = squeeze(positions.y);
-                    pos.z = squeeze(positions.z);
+                    pos.x = squeeze(positions.x) + Alignment.dx;
+                    pos.y = squeeze(positions.y) + Alignment.dy;
+                    pos.z = squeeze(positions.z) + Alignment.dz;
                     
                     view.Brillouin.plot = imagesc(ax, pos.(nsdims{2})(1,:), pos.(nsdims{1})(:,1), d);
                     axis(ax, 'equal');
@@ -130,16 +137,14 @@ function onFileChange(view, model)
                     minX = min(positions.x(:));
                     maxX = max(positions.x(:));
                     xPos = [minX, maxX, maxX, minX, minX];
-                    Brillouin.position.x = xPos;
+                    Alignment.position.x = xPos;
                     minY = min(positions.y(:));
                     maxY = max(positions.y(:));
                     yPos = [minY, minY, maxY, maxY, minY];
-                    Brillouin.position.y = yPos;
+                    Alignment.position.y = yPos;
                 case 3
             end
             set(handles.date, 'String', Brillouin.date);
-            
-            model.Brillouin = Brillouin;
             %% Update field of view
             onFOVChange(view, model);
         catch
@@ -154,7 +159,7 @@ function onFileChange(view, model)
         end
         set(handles.date, 'String', '');
     end
-    model.Brillouin = Brillouin;
+    model.Alignment = Alignment;
 end
 
 function onFOVChange(view, model)
@@ -167,4 +172,8 @@ function onFOVChange(view, model)
             ylim(ax, [model.parameters.ylim]);
         end
     end
+end
+
+function onAlignment(view, model)
+    onFileChange(view, model);
 end

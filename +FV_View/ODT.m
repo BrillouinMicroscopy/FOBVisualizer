@@ -10,11 +10,11 @@ function ODT(view, model)
     addlistener(model, 'ODT', 'PostSet', ...
         @(o,e) onFileChange(view, e.AffectedObject));
     
+    addlistener(model, 'Alignment', 'PostSet', ...
+        @(o,e) onAlignment(view, e.AffectedObject));
+    
     addlistener(model, 'parameters', 'PostSet', ...
         @(o,e) onFOVChange(view, e.AffectedObject));
-    
-    addlistener(model, 'Brillouin', 'PostSet', ...
-        @(o,e) onBrillouinChange(view, e.AffectedObject));
 end
 
 function initGUI(model, view)
@@ -124,7 +124,7 @@ function onFileChange(view, model)
             set(ax, 'yDir', 'normal');
 %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
             onFOVChange(view, model);
-            onBrillouinChange(view, model);
+            onAlignment(view, model);
         catch
             if ishandle(view.ODT.plot)
                 delete(view.ODT.plot)
@@ -149,17 +149,19 @@ function onFOVChange(view, model)
     end
 end
 
-function onBrillouinChange(view, model)
+function onAlignment(view, model)
     if ~isempty(model.ODT.repetitions)
         ax = view.ODT.axesImage;
         hold(ax, 'on');
         if ishandle(view.ODT.positionPlot)
             delete(view.ODT.positionPlot)
         end
-        if length(model.Brillouin.position.x) == 1
-            view.ODT.positionPlot = plot(ax, model.Brillouin.position.x, model.Brillouin.position.y, 'color', 'red', 'linewidth', 1.5, 'marker', 'o');
+        if length(model.Alignment.position.x) == 1
+            view.ODT.positionPlot = plot(ax, model.Alignment.position.x + model.Alignment.dx, model.Alignment.position.y + model.Alignment.dy, ...
+                'color', 'red', 'linewidth', 1.5, 'marker', 'o');
         else
-            view.ODT.positionPlot = plot(ax, model.Brillouin.position.x, model.Brillouin.position.y, 'color', 'red', 'linewidth', 1.5);
+            view.ODT.positionPlot = plot(ax, model.Alignment.position.x + model.Alignment.dx, model.Alignment.position.y + model.Alignment.dy, ...
+                'color', 'red', 'linewidth', 1.5);
         end
     end
 end
