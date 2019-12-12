@@ -68,6 +68,11 @@ function start(~, ~, view, model)
 
                     [X, Y] = meshgrid(x, y);
                     
+                    %% Interpolate NaNs in case there are some
+                    if sum(isnan(BS(:))) > 0
+                       BS = FV_Utils.Inpaint_Nans.inpaint_nans(BS); 
+                    end
+                    
                     %% Interpolate Brillouin shift to match ODT resolution
                     BS_int = interp2(pos.x, pos.y, BS, X, Y);
                     
