@@ -15,6 +15,9 @@ function selectRepetition(src, ~, model)
     repetition.name = model.Brillouin.repetitions{val};
     
     loadRepetition(model, repetition);
+
+    % Load the alignment from file
+    model.controllers.data.loadAlignmentData();
 end
 
 function loadRepetition(model, repetition)

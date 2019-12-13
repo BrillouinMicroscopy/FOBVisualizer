@@ -64,7 +64,11 @@ function onFileChange(view, model)
             zeta = (2*cos(Brillouin.setup.theta/2) * RI) ./ (Brillouin.setup.lambda * sqrt(rho));
 
             % calculate M'
-            modulus = (1e9*BS./zeta).^2;
+            M = (1e9*BS./zeta).^2;
+            
+            modulus.M = M;
+            modulus.RI = RI;
+            model.modulus = modulus;
             
             if ishandle(view.Modulus.plot)
                 delete(view.Modulus.plot)
@@ -73,14 +77,14 @@ function onFileChange(view, model)
                 case 0
                 case 1
                     %% one dimensional case
-                    d = 1e-9*squeeze(modulus);
+                    d = 1e-9*squeeze(M);
                     p = squeeze(positions.(Brillouin.nsdims{1}));
                     view.Modulus.plot = plot(ax, p, d, 'marker', 'x');
                     xlim([min(p(:)), max(p(:))]);
                     ylim([min(d(:)), max(d(:))]);
                 case 2
                     %% two dimensional case
-                    d = 1e-9*squeeze(modulus);
+                    d = 1e-9*squeeze(M);
                     pos.x = squeeze(positions.x) + Alignment.dx;
                     pos.y = squeeze(positions.y) + Alignment.dy;
                     pos.z = squeeze(positions.z) + Alignment.dz;

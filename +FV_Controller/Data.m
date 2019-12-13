@@ -10,7 +10,8 @@ function callbacks = Data(model, view)
 
     callbacks = struct( ...
         'open', @(filePath)openFile(model, filePath), ...
-        'closeFile', @()closeFile('', '', model) ...
+        'closeFile', @()closeFile('', '', model), ...
+        'loadAlignmentData', @()loadAlignmentData(model) ...
     );
 end
 
@@ -65,6 +66,7 @@ function openFile(model, filePath)
         
         model.controllers.Brillouin.loadRepetition();
         model.controllers.ODT.loadRepetition();
+        loadAlignmentData(model);
     end
 end
 
@@ -84,6 +86,39 @@ function closeFile(~, ~, model)
 end
 
 function selectSaveData(~, ~, model)
+    filepath = constructAlignmentFilepath(model);
+    
+    Alignment = model.Alignment;
+    modulus = model.modulus;
+    save(filepath, 'Alignment', 'modulus');
+end
+
+function loadAlignmentData(model)
+    filepath = constructAlignmentFilepath(model);
+    
+    if exist(filepath, 'file')
+        data = load(filepath, 'Alignment', 'modulus');
+        Alignment = data.Alignment;
+        modulus = data.modulus;
+    else
+        Alignment = model.defaultAlignment;
+        modulus = model.defaultModulus;
+    end
+    model.modulus = modulus;
+    model.Alignment = Alignment;
+end
+
+function filepath = constructAlignmentFilepath(model)
+    Brillouin = model.Brillouin;
+    ODT = model.ODT;
+    [~, name, ~] = fileparts(model.filename);
+    if length(Brillouin.repetitions) > 1
+        name = [name '_BMrep' num2str(Brillouin.repetition.name)];
+    end
+    if length(ODT.repetitions) > 1
+        name = [name '_ODTrep' num2str(ODT.repetition.name)];
+    end
+    filepath = [model.filepath '..' filesep 'EvalData' filesep name '_modulus.mat'];
 end
 
 function openAlignment(~, ~, view, model)    

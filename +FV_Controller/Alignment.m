@@ -1,6 +1,8 @@
 function callbacks = Alignment(model, view)
 %% ALIGNMENT Controller
 % 
+    set(view.Alignment.parent, 'CloseRequestFcn', {@closeAlignment, model, view});
+    
     set(view.Alignment.start, 'Callback', {@start, view, model});
     
     set(view.Alignment.save, 'Callback', {@save, view, model});
@@ -168,12 +170,28 @@ function save(~, ~, ~, model)
         Alignment.dz = model.temporary.Alignment.dz_tmp;
     end
     model.Alignment = Alignment;
+    cleanupTemporary(model);
 end
 
-function closeAlignment(~, ~, ~, view)
-    close(view.Alignment.parent);
+function closeAlignment(~, ~, model, view)
+    cleanupTemporary(model);
+    delete(view.Alignment.parent);
 end
 
 function setAlignment(src, ~, type, model)
     model.temporary.Alignment.([type '_tmp']) = str2double(get(src, 'String'));
+end
+
+function cleanupTemporary(model)
+    AlignmentTemp = model.temporary.Alignment;
+    if isfield(AlignmentTemp, 'dx_tmp')
+        AlignmentTemp = rmfield(AlignmentTemp, 'dx_tmp');
+    end
+    if isfield(AlignmentTemp, 'dy_tmp')
+        AlignmentTemp = rmfield(AlignmentTemp, 'dy_tmp');
+    end
+    if isfield(AlignmentTemp, 'dz_tmp')
+        AlignmentTemp = rmfield(AlignmentTemp, 'dz_tmp');
+    end
+    model.temporary.Alignment = AlignmentTemp;
 end
