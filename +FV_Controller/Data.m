@@ -90,7 +90,8 @@ function selectSaveData(~, ~, model)
     
     Alignment = model.Alignment;
     modulus = model.modulus;
-    save(filepath, 'Alignment', 'modulus');
+    programVersion = model.programVersion;
+    save(filepath, 'Alignment', 'modulus', 'programVersion');
 end
 
 function loadAlignmentData(model)
