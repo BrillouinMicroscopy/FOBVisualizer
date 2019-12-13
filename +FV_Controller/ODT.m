@@ -66,6 +66,7 @@ function loadRepetition(model, view, repetition)
     end
     
     model.ODT = ODT;
+    model.controllers.modulus.calculateModulus();
 end
 
 function toggleMaxProj(~, ~, model, view)

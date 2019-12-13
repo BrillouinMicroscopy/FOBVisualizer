@@ -170,6 +170,7 @@ function save(~, ~, model, view)
     end
     if changed
         model.Alignment = Alignment;
+        model.controllers.modulus.calculateModulus();
     end
 end
 

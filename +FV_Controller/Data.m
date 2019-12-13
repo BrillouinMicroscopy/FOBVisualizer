@@ -106,7 +106,8 @@ function loadAlignmentData(model)
         modulus = model.defaultModulus;
     end
     model.modulus = modulus;
-    model.Alignment = Alignment;
+    model.controllers.Brillouin.extractAlignment(Alignment);
+    model.controllers.modulus.calculateModulus();
 end
 
 function filepath = constructAlignmentFilepath(model)
