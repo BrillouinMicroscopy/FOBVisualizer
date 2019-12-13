@@ -15,7 +15,6 @@ classdef Model < handle
         modulus;            % parameters of the longitudinal modulus calculation
         Alignment;          % parameters of the spatial alignment for ODT and BM
         ODT;                % parameters of the ODT measurement
-        temporary;          % parameters that need to be stored temporarily
     end
     properties (Constant)
         programVersion = getProgramVersion();
@@ -88,9 +87,6 @@ classdef Model < handle
             'xlim', [NaN NaN], ...
             'ylim', [NaN NaN] ...
         );
-        defaultTemporary = struct( ...
-            'Alignment', struct() ...
-        );
     end
 
     methods
@@ -101,7 +97,6 @@ classdef Model < handle
             obj.modulus = obj.defaultModulus();
             obj.Alignment = obj.defaultAlignment();
             obj.parameters = obj.defaultParameters();
-            obj.temporary = obj.defaultTemporary();
         end
         %% Function to reset the model
         function reset(obj)
@@ -112,7 +107,6 @@ classdef Model < handle
             obj.modulus = obj.defaultModulus();
             obj.Alignment = obj.defaultAlignment();
             obj.parameters = obj.defaultParameters();
-            obj.temporary = obj.defaultTemporary();
         end
     end
 end

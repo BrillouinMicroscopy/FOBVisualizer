@@ -1,16 +1,10 @@
 function callbacks = Alignment(model, view)
 %% ALIGNMENT Controller
-% 
-    set(view.Alignment.parent, 'CloseRequestFcn', {@closeAlignment, model, view});
+%     
+    set(view.Alignment.start, 'Callback', {@start, model, view});
     
-    set(view.Alignment.start, 'Callback', {@start, view, model});
-    
-    set(view.Alignment.save, 'Callback', {@save, view, model});
-    set(view.Alignment.cancel, 'Callback', {@closeAlignment, model, view});
-    
-    set(view.Alignment.dx, 'Callback', {@setAlignment, 'dx', model});
-    set(view.Alignment.dy, 'Callback', {@setAlignment, 'dy', model});
-    set(view.Alignment.dz, 'Callback', {@setAlignment, 'dz', model});
+    set(view.Alignment.save, 'Callback', {@save, model, view});
+    set(view.Alignment.cancel, 'Callback', {@closeAlignment, view});
     
     %% general panel
 
@@ -18,7 +12,7 @@ function callbacks = Alignment(model, view)
     );
 end
 
-function start(~, ~, view, model)
+function start(~, ~, model, view)
     Brillouin = model.Brillouin;
     ODT = model.ODT;
     
@@ -138,16 +132,14 @@ function start(~, ~, view, model)
                     [indX, indY] = ind2sub(size(corrVal), ind);
                     
                     %% Save values
-                    temporary = model.temporary;
-                    temporary.Alignment.dx_tmp = -1 * (indY - (size(BS_int_grad, 2) + size(RI_int_grad, 2)) / 2) * ...
+                    dx = -1 * (indY - (size(BS_int_grad, 2) + size(RI_int_grad, 2)) / 2) * ...
                         (Y_int(2,1) - Y_int(1,1));
-                    temporary.Alignment.dy_tmp = -1 * (indX - (size(BS_int_grad, 1) + size(RI_int_grad, 1)) / 2) * ...
+                    dy = -1 * (indX - (size(BS_int_grad, 1) + size(RI_int_grad, 1)) / 2) * ...
                         (X_int(1,2) - X_int(1,1));
-                    temporary.Alignment.dz_tmp = (indZ - size(zetts, 2)/2) * ODT.data.res4;
-                    set(view.Alignment.dx, 'String', temporary.Alignment.dx_tmp);
-                    set(view.Alignment.dy, 'String', temporary.Alignment.dy_tmp);
-                    set(view.Alignment.dz, 'String', temporary.Alignment.dz_tmp);
-                    model.temporary = temporary;
+                    dz = (indZ - size(zetts, 2)/2) * ODT.data.res4;
+                    set(view.Alignment.dx, 'String', dx);
+                    set(view.Alignment.dy, 'String', dy);
+                    set(view.Alignment.dz, 'String', dz);
                     
                 case 3
             end
@@ -157,41 +149,30 @@ function start(~, ~, view, model)
     end
 end
 
-function save(~, ~, ~, model)
+function save(~, ~, model, view)
     %% save data here
     Alignment = model.Alignment;
-    if isfield(model.temporary.Alignment, 'dx_tmp')
-        Alignment.dx = model.temporary.Alignment.dx_tmp;
+    changed = false;
+    dx = str2double(get(view.Alignment.dx, 'String'));
+    if Alignment.dx ~= dx
+        Alignment.dx = dx;
+        changed = true;
     end
-    if isfield(model.temporary.Alignment, 'dy_tmp')
-        Alignment.dy = model.temporary.Alignment.dy_tmp;
+    dy = str2double(get(view.Alignment.dy, 'String'));
+    if Alignment.dy ~= dy
+        Alignment.dy = dy;
+        changed = true;
     end
-    if isfield(model.temporary.Alignment, 'dz_tmp')
-        Alignment.dz = model.temporary.Alignment.dz_tmp;
+    dz = str2double(get(view.Alignment.dz, 'String'));
+    if Alignment.dz ~= dz
+        Alignment.dz = dz;
+        changed = true;
     end
-    model.Alignment = Alignment;
-    cleanupTemporary(model);
+    if changed
+        model.Alignment = Alignment;
+    end
 end
 
-function closeAlignment(~, ~, model, view)
-    cleanupTemporary(model);
-    delete(view.Alignment.parent);
-end
-
-function setAlignment(src, ~, type, model)
-    model.temporary.Alignment.([type '_tmp']) = str2double(get(src, 'String'));
-end
-
-function cleanupTemporary(model)
-    AlignmentTemp = model.temporary.Alignment;
-    if isfield(AlignmentTemp, 'dx_tmp')
-        AlignmentTemp = rmfield(AlignmentTemp, 'dx_tmp');
-    end
-    if isfield(AlignmentTemp, 'dy_tmp')
-        AlignmentTemp = rmfield(AlignmentTemp, 'dy_tmp');
-    end
-    if isfield(AlignmentTemp, 'dz_tmp')
-        AlignmentTemp = rmfield(AlignmentTemp, 'dz_tmp');
-    end
-    model.temporary.Alignment = AlignmentTemp;
+function closeAlignment(~, ~, view)
+    close(view.Alignment.parent);
 end
