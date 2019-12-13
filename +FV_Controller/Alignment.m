@@ -69,6 +69,9 @@ function start(~, ~, model, view)
                        BS = FV_Utils.Inpaint_Nans.inpaint_nans(BS); 
                     end
                     
+                    %% Remove extreme outliers
+                    BS = medfilt2(BS, 'symmetric');
+                    
                     %% Interpolate Brillouin shift to match ODT resolution
                     BS_int = interp2(pos.x, pos.y, BS, X, Y);
                     
