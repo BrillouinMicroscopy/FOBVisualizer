@@ -19,10 +19,10 @@ function calculateModulus(model)
         try
             positions = Brillouin.positions;
 
-            BS = nanmean(Brillouin.shift, 4);
-
             RI = interp3(ODT.positions.x, ODT.positions.y, ODT.positions.z, ODT.data.Reconimg, ...
                 Alignment.dx + positions.x, Alignment.dy + positions.y, Alignment.dz + positions.z);
+            
+            RI = repmat(RI, 1, 1, 1, size(Brillouin.shift, 4));
 
             % calculate density
             rho = (RI - modulus.n0)/modulus.alpha + modulus.rho0;
@@ -31,7 +31,7 @@ function calculateModulus(model)
             zeta = (2*cos(Brillouin.setup.theta/2) * RI) ./ (Brillouin.setup.lambda * sqrt(rho));
 
             % calculate M'
-            M = (1e9*BS./zeta).^2;
+            M = (1e9*Brillouin.shift./zeta).^2;
 
             modulus.M = M;
             modulus.RI = RI;

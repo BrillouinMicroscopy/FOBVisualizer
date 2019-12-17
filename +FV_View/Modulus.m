@@ -55,14 +55,16 @@ function onFileChange(view, model)
                 case 0
                 case 1
                     %% one dimensional case
-                    d = 1e-9*squeeze(model.modulus.M);
+                    M = nanmean(model.modulus.M, 4);
+                    d = 1e-9*squeeze(M);
                     p = squeeze(positions.(Brillouin.nsdims{1}));
                     view.Modulus.plot = plot(ax, p, d, 'marker', 'x');
                     xlim([min(p(:)), max(p(:))]);
                     ylim([min(d(:)), max(d(:))]);
                 case 2
                     %% two dimensional case
-                    d = 1e-9*squeeze(model.modulus.M);
+                    M = nanmean(model.modulus.M, 4);
+                    d = 1e-9*squeeze(M);
                     pos.x = squeeze(positions.x) + Alignment.dx;
                     pos.y = squeeze(positions.y) + Alignment.dy;
                     pos.z = squeeze(positions.z) + Alignment.dz;
