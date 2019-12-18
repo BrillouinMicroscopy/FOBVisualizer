@@ -19,6 +19,7 @@ function calculateModulus(model)
         try
             positions = Brillouin.positions;
 
+            %% Calculate the longitudinal modulus with measured RI
             RI = interp3(ODT.positions.x, ODT.positions.y, ODT.positions.z, ODT.data.Reconimg, ...
                 Alignment.dx + positions.x, Alignment.dy + positions.y, Alignment.dz + positions.z);
             
@@ -32,8 +33,19 @@ function calculateModulus(model)
 
             % calculate M'
             M = (1e9*Brillouin.shift./zeta).^2;
+            
+            %% Calculate the longitudinal modulus without measured RI
+            RI_woRI = modulus.n0 * ones(size(Brillouin.shift));
+            rho_woRI = 1e3*modulus.rho0;
+            
+            zeta_woRI = (2*cos(Brillouin.setup.theta/2) * RI_woRI) ./ (Brillouin.setup.lambda * sqrt(rho_woRI));
+            
+            % calculate M'
+            M_woRI = (1e9*Brillouin.shift./zeta_woRI).^2;
 
+            %% Save to structure
             modulus.M = M;
+            modulus.M_woRI = M_woRI;
             modulus.RI = RI;
             modulus.rho = rho;
 
