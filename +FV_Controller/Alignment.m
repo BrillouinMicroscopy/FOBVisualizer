@@ -139,7 +139,7 @@ function start(~, ~, model, view)
                         (Y_int(2,1) - Y_int(1,1));
                     dy = -1 * (indX - (size(BS_int_grad, 1) + size(RI_int_grad, 1)) / 2) * ...
                         (X_int(1,2) - X_int(1,1));
-                    dz = (indZ - size(zetts, 2)/2) * ODT.data.res4;
+                    dz = (indZ - size(zetts, 2)/2) * ODT.data.res4 - pos.z(1,1,1);
                     set(view.Alignment.dx, 'String', dx);
                     set(view.Alignment.dy, 'String', dy);
                     set(view.Alignment.dz, 'String', dz);
