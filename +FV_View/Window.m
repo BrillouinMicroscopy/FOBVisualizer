@@ -11,16 +11,16 @@ function initGUI(model, view)
     set(f, 'menubar', 'none', 'Resize', 'off');
     
     % set menubar
-    menubar.file = uimenu(f,'Label','File');
+    menubar.file = uimenu(f,'Label','&File');
     menubar.fileOpen   = uimenu(menubar.file,'Label','Open','Accelerator','O');
     menubar.fileClose  = uimenu(menubar.file,'Label','Close','Accelerator','W');                 
     menubar.fileSave   = uimenu(menubar.file,'Label','Save','Accelerator','S');
     
-    menubar.edit = uimenu(f,'Label','Edit');
+    menubar.edit = uimenu(f,'Label','&Edit');
     menubar.openAlignment = uimenu(menubar.edit,'Label','Align','Accelerator','A');
     
-    menubar.help = uimenu(f,'Label','Help');
-    menubar.helpAbout  = uimenu(menubar.help,'Label','About','Accelerator','A');
+    menubar.help = uimenu(f,'Label','&Help');
+    menubar.helpAbout  = uimenu(menubar.help,'Label','About','Accelerator','H');
     
     view.data.parent = f;
     view.ODT.parent = f;
