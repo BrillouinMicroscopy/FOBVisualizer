@@ -1,7 +1,7 @@
-function plotFluorescence(filename)
+function plotFluorescence(parameters)
     try
         %% construct filename
-        filePath = ['RawData' filesep filename '.h5'];
+        filePath = [parameters.path filesep 'RawData' filesep parameters.filename '.h5'];
         %% Open file for reading
         file = h5bmread(filePath);
         
@@ -15,11 +15,13 @@ function plotFluorescence(filename)
                 image = file.readPayloadData('Fluorescence', repetitions{ii}, 'data', imageNumbers{kk});
                 image = flipud(image);
                 %% Construct image path
-                imagePath = ['Plots' filesep filename ...
+                imagePath = [parameters.path filesep 'Plots' filesep parameters.filename ...
                     sprintf('_rep%01d_channel%s', ii-1, channel) '.png'];
                 switch (channel)
                     case 'Brightfield'
                         nrValues = 256;
+                        tmp = image - min(image(:));
+                        image = nrValues * tmp ./ max(tmp(:));
                         map = gray(nrValues);
                     case 'Green'
                         nrValues = 256;
@@ -28,7 +30,7 @@ function plotFluorescence(filename)
                     case 'Red'
                         nrValues = 256;
                         map = zeros(nrValues, 3);
-                        map(:,1)=linspace(0, 1, nrValues);
+                        map(:,1) = linspace(0, 1, nrValues);
                     case 'Blue'
                         nrValues = 256;
                         map = zeros(nrValues, 3);
@@ -37,6 +39,7 @@ function plotFluorescence(filename)
                 imwrite(image, map, imagePath);
             end
         end
+        h5bmclose(file);
     catch
     end
 end
