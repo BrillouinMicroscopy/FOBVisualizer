@@ -59,7 +59,7 @@ function plotCombinedFluorescence(parameters)
                     pmap = imgaussfilt(temp, 300);
                     temp = temp - pmap;
                     temp = wiener2(temp, [5 5]);
-                    fluorescence(:, :, ind) = uint8(temp ./ max(temp(:)) * 375);
+                    fluorescence(:, :, ind) = uint8(temp ./ max(temp(:)) * 255);
                 end
             end
 
