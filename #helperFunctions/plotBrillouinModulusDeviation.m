@@ -1,55 +1,90 @@
-function plotBrillouinModulusDeviation(filename, settings)
+function plotBrillouinModulusDeviation(parameters)
 
-    plotPath = '.';
-    
-    %% directory for the plots
-    plotDir = 'Plots';
-    if ~exist(plotDir, 'dir')
-        mkdir(plotDir);
-    end
-    barePlotDir = ['Plots' filesep 'Bare'];
-    if ~exist(barePlotDir, 'dir')
-        mkdir(barePlotDir);
-    end
-    axisPlotDir = ['Plots' filesep 'WithAxis'];
-    if ~exist(axisPlotDir, 'dir')
-        mkdir(axisPlotDir);
-    end
-
-    %% plot the measurement results
-    results = load(['EvalData' filesep filename '.mat']);
-
-    LongitudinalModulus = results.results.results.longitudinalModulus;
-    LongitudinalModulus_without_RI = results.results.results.longitudinalModulus_without_RI;
-    validity = results.results.results.validity;
-    validityLevel = results.results.results.peaksBrillouin_dev./results.results.results.peaksBrillouin_int;
-
-    dims = {'X', 'Y', 'Z'};
-    for kk = 1:length(dims)
-        pos.([dims{kk} '_zm']) = ...
-            results.results.parameters.positions.(dims{kk});
-        pos.([dims{kk} '_zm']) = squeeze(pos.([dims{kk} '_zm']));
-    end
-    
-    %% Calculate the FOV for the RI measurements
-    nrPix = size(results.results.results.RISection, 1);
-    res = 0.2530;
-    pos.X_zm_RI = ((1:nrPix)-nrPix/2)*res;
-    pos.Y_zm_RI = pos.X_zm_RI;
-
-    names = {};
     try
-        masks = results.results.results.masks;
-    catch
-        masks = {};
-    end
-    
-    %% Plot longitudinal modulus without RI
-    % filter invalid values
-    LongitudinalModulus_without_RI(~validity) = NaN;
-    LongitudinalModulus_without_RI(validityLevel > settings.validityLimit) = NaN;
+        %% construct filename
+        filePath = [parameters.path filesep 'RawData' filesep parameters.filename '.h5'];
+        %% Open file for reading
+        file = h5bmread(filePath);
+        
+        %% Loop over all repetitions
+        ODTrepetitions = file.getRepetitions('ODT');
+        BMrepetitions = file.getRepetitions('Brillouin');
+        
+        %% Loop over all combinations of BM and ODT repetitions
+        for ll = 1:length(ODTrepetitions)
+            for jj = 1:length(BMrepetitions)
+                try
+                    %% Load alignment and modulus
+                    alignmentFilename = parameters.filename;
+                    if length(BMrepetitions) > 1
+                        alignmentFilename = [alignmentFilename '_BMrep' num2str(BMrepetitions{jj})]; %#ok<AGROW>
+                    end
+                    if length(ODTrepetitions) > 1
+                        alignmentFilename = [alignmentFilename '_ODTrep' num2str(ODTrepetitions{ll})]; %#ok<AGROW>
+                    end
+                    alignmentPath = [parameters.path filesep 'EvalData' filesep alignmentFilename '_modulus.mat'];
+                    alignment = load(alignmentPath);
+            
+                    %% plot the measurement results
+                    BMfilename = parameters.filename;
+                    if length(BMrepetitions) > 1
+                        BMfilename = [BMfilename '_rep' num2str(BMrepetitions{jj})]; %#ok<AGROW>
+                    end
 
-    plotData(plotPath, 1e2*(LongitudinalModulus - LongitudinalModulus_without_RI) / min(LongitudinalModulus(:)), pos, settings.cax.lm_no_RI, '$\Delta M$ [\%]', [filename '_longitudinalModulus_without_RI'], 0, masks, names);
+                    BMresults = load([parameters.path filesep 'EvalData' filesep BMfilename '.mat']);
+                    
+                    validity = BMresults.results.results.validity;
+                    validityLevel = BMresults.results.results.peaksBrillouin_dev./BMresults.results.results.peaksBrillouin_int;
+
+                    dims = {'X', 'Y', 'Z'};
+                    for kk = 1:length(dims)
+                        pos.([dims{kk} '_zm']) = ...
+                            BMresults.results.parameters.positions.(dims{kk});
+                        pos.([dims{kk} '_zm']) = squeeze(pos.([dims{kk} '_zm']));
+                    end
+                    pos.X_zm = pos.X_zm + alignment.Alignment.dx;
+                    pos.Y_zm = pos.Y_zm + alignment.Alignment.dy;
+                    pos.Z_zm = pos.Z_zm + alignment.Alignment.dz;
+
+                    %% Calculate the FOV for the RI measurements
+                    nrPix = 342;%size(BMresults.results.results.RISection, 1);
+                    res = 0.2530;
+                    pos.X_zm_RI = ((1:nrPix) - nrPix/2) * res;
+                    pos.Y_zm_RI = pos.X_zm_RI;
+
+                    names = {};
+                    try
+                        masks = BMresults.results.results.masks;
+                    catch
+                        masks = {};
+                    end
+    
+                    %% Plot longitudinal modulus without RI
+                    M = 1e-9*alignment.modulus.M;
+                    M_woRI = 1e-9*alignment.modulus.M_woRI;
+                    
+                    % filter invalid values
+                    M(~validity) = NaN;
+                    M(validityLevel > parameters.Modulus.validity) = NaN;
+                    
+                    M_woRI(~validity) = NaN;
+                    M_woRI(validityLevel > parameters.Modulus.validity) = NaN;
+
+                    M_woRI_norm = 1e2*(M - M_woRI) / min(M(:));
+                    
+                    M_woRI_norm_mean = nanmean(M_woRI_norm, 4);
+                    
+                    plotData(parameters.path, M_woRI_norm_mean , pos, parameters.Modulus.M_woRI_norm.cax, ...
+                        '$\Delta M$ [\%]', [alignmentFilename '_modulusDeviation'], 0, masks, names);
+                    
+                catch
+                end
+            end
+        end
+        
+        h5bmclose(file);
+    catch
+    end
     
     function plotData(plotPath, data, pos, cax, colorbarTitle, filename, showOutline, masks, names)
         
@@ -74,7 +109,7 @@ function plotBrillouinModulusDeviation(filename, settings)
         end
         axis equal;
         axis([min(pos.X_zm(:)), max(pos.X_zm(:)), min(pos.Y_zm(:)), max(pos.Y_zm(:))]);
-        caxis([cax.min cax.max]);
+        caxis(cax);
         cb = colorbar;
         %% Check if the coolwarm colormap function exists, if not use jet
         if exist('coolwarm', 'file') == 2
@@ -118,15 +153,15 @@ function plotBrillouinModulusDeviation(filename, settings)
         pixelValues = fliplr(pixelValues);
 
         % set caxis for png image
-        pixelValues(pixelValues < cax.min) = cax.min;
-        pixelValues(pixelValues > cax.max) = cax.max;
+        pixelValues(pixelValues < cax(1)) = cax(1);
+        pixelValues(pixelValues > cax(2)) = cax(2);
 
         % transparency matrix
         transparent = double(~isnan(pixelValues));
 
         % scale image values to 'bitdepth' bit
-        pixelValues = pixelValues - cax.min;
-        pixelValues = round(2^8*pixelValues/(cax.max-cax.min));
+        pixelValues = pixelValues - cax(1);
+        pixelValues = round(2^8*pixelValues/(cax(2)-cax(1)));
 
         RGB = ind2rgb(pixelValues, map);
         

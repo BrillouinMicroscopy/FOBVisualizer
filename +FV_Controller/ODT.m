@@ -18,6 +18,9 @@ function selectRepetition(src, ~, model, view)
     repetition.name = model.ODT.repetitions{val};
     
     loadRepetition(model, view, repetition);
+
+    % Load the alignment from file
+    model.controllers.data.loadAlignmentData();
 end
 
 function loadRepetition(model, view, repetition)
@@ -63,6 +66,7 @@ function loadRepetition(model, view, repetition)
     end
     
     model.ODT = ODT;
+    model.controllers.modulus.calculateModulus();
 end
 
 function toggleMaxProj(~, ~, model, view)

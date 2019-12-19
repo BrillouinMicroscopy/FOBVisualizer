@@ -6,9 +6,12 @@ function callbacks = Data(model, view)
     set(view.menubar.fileClose, 'Callback', {@closeFile, model});
     set(view.menubar.fileSave, 'Callback', {@selectSaveData, model});
 
+    set(view.menubar.openAlignment, 'Callback', {@openAlignment, view, model});
+
     callbacks = struct( ...
         'open', @(filePath)openFile(model, filePath), ...
-        'closeFile', @()closeFile('', '', model) ...
+        'closeFile', @()closeFile('', '', model), ...
+        'loadAlignmentData', @()loadAlignmentData(model) ...
     );
 end
 
@@ -63,6 +66,7 @@ function openFile(model, filePath)
         
         model.controllers.Brillouin.loadRepetition();
         model.controllers.ODT.loadRepetition();
+        loadAlignmentData(model);
     end
 end
 
@@ -82,4 +86,62 @@ function closeFile(~, ~, model)
 end
 
 function selectSaveData(~, ~, model)
+    filepath = constructAlignmentFilepath(model);
+    
+    Alignment = model.Alignment;
+    modulus = model.modulus;
+    programVersion = model.programVersion;
+    save(filepath, 'Alignment', 'modulus', 'programVersion');
+end
+
+function loadAlignmentData(model)
+    filepath = constructAlignmentFilepath(model);
+    
+    if exist(filepath, 'file')
+        data = load(filepath, 'Alignment', 'modulus');
+        Alignment = data.Alignment;
+        modulus = data.modulus;
+    else
+        Alignment = model.defaultAlignment;
+        modulus = model.defaultModulus;
+    end
+    if ~isfield(modulus, 'rho_dry')
+        modulus.rho_dry = model.defaultModulus.rho_dry;
+    end
+    if ~isfield(modulus, 'useDryDensity')
+        modulus.useDryDensity = model.defaultModulus.useDryDensity;
+    end
+    model.modulus = modulus;
+    model.controllers.Brillouin.extractAlignment(Alignment);
+    model.controllers.modulus.calculateModulus();
+end
+
+function filepath = constructAlignmentFilepath(model)
+    Brillouin = model.Brillouin;
+    ODT = model.ODT;
+    [~, name, ~] = fileparts(model.filename);
+    if length(Brillouin.repetitions) > 1
+        name = [name '_BMrep' num2str(Brillouin.repetition.name)];
+    end
+    if length(ODT.repetitions) > 1
+        name = [name '_ODTrep' num2str(ODT.repetition.name)];
+    end
+    filepath = [model.filepath '..' filesep 'EvalData' filesep name '_modulus.mat'];
+end
+
+function openAlignment(~, ~, view, model)    
+    if isfield(view.Alignment, 'parent') && ishandle(view.Alignment.parent)
+        figure(view.Alignment.parent);
+        return;
+    else
+        % open it centered over main figure
+        pos = view.figure.Position;
+        parent = figure('Position', [pos(1) + pos(3)/2 - 450, pos(2) + pos(4)/2 - 325, 900, 650]);
+        % hide the menubar and prevent resizing
+        set(parent, 'menubar', 'none', 'Resize','off', 'units', 'pixels');
+    end
+
+    view.Alignment = FV_View.Alignment(parent, model);
+
+    FV_Controller.Alignment(model, view);
 end

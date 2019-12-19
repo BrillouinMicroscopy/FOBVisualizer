@@ -10,6 +10,9 @@ function Brillouin(view, model)
     addlistener(model, 'Brillouin', 'PostSet', ...
         @(o,e) onFileChange(view, e.AffectedObject));
     
+    addlistener(model, 'Alignment', 'PostSet', ...
+        @(o,e) onFileChange(view, e.AffectedObject));
+    
     addlistener(model, 'parameters', 'PostSet', ...
         @(o,e) onFOVChange(view, e.AffectedObject));
 end
@@ -53,6 +56,7 @@ end
 
 function onFileChange(view, model)
     Brillouin = model.Brillouin;
+    Alignment = model.Alignment;
     handles = view.Brillouin;
     reps = Brillouin.repetitions;
     if (isempty(reps))
@@ -71,53 +75,26 @@ function onFileChange(view, model)
             BS = nanmean(Brillouin.shift, 4);
             positions = Brillouin.positions;
             
-            dimensions = size(BS);
-            dimension = sum(dimensions > 1);
-            Brillouin.dimension = dimension;
-            
-            %% find non-singular dimensions
-            dims = {'y', 'x', 'z'};
-            nsdims = cell(dimension,1);
-            sdims = cell(dimension,1);
-            ind = 0;
-            sind = 0;
-            for jj = 1:length(dimensions)
-                if dimensions(jj) > 1
-                    ind = ind + 1;
-                    nsdims{ind} = dims{jj};
-                else
-                    sind = sind + 1;
-                    sdims{sind} = dims{jj};
-                end
-            end
-            Brillouin.nsdims = nsdims;
-            
             if ishandle(view.Brillouin.plot)
                 delete(view.Brillouin.plot)
             end
-            switch (dimension)
+            switch (Brillouin.dimension)
                 case 0
                 case 1
                     %% one dimensional case
                     d = squeeze(BS);
-                    p = squeeze(positions.(nsdims{1}));
+                    p = squeeze(positions.(Brillouin.nsdims{1}));
                     view.Brillouin.plot = plot(ax, p, d, 'marker', 'x');
                     xlim([min(p(:)), max(p(:))]);
                     ylim([min(d(:)), max(d(:))]);
-
-                    %% Extract positions to show in ODT and Fluorescence
-                    xPos = nanmean(positions.(sdims{2})(:));
-                    Brillouin.position.x = xPos;
-                    yPos = nanmean(positions.(sdims{1})(:));
-                    Brillouin.position.y = yPos;
                 case 2
                     %% two dimensional case
                     d = squeeze(BS);
-                    pos.x = squeeze(positions.x);
-                    pos.y = squeeze(positions.y);
-                    pos.z = squeeze(positions.z);
+                    pos.x = squeeze(positions.x) + Alignment.dx;
+                    pos.y = squeeze(positions.y) + Alignment.dy;
+                    pos.z = squeeze(positions.z) + Alignment.dz;
                     
-                    view.Brillouin.plot = imagesc(ax, pos.(nsdims{2})(1,:), pos.(nsdims{1})(:,1), d);
+                    view.Brillouin.plot = imagesc(ax, pos.(Brillouin.nsdims{2})(1,:), pos.(Brillouin.nsdims{1})(:,1), d);
                     axis(ax, 'equal');
                     xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
                     ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
@@ -125,21 +102,9 @@ function onFileChange(view, model)
                     cb = colorbar(ax);
                     ylabel(cb, '$\nu$ [GHz]', 'interpreter', 'latex');
                     set(ax, 'yDir', 'normal');
-
-                    %% Extract positions to show in ODT and Fluorescence
-                    minX = min(positions.x(:));
-                    maxX = max(positions.x(:));
-                    xPos = [minX, maxX, maxX, minX, minX];
-                    Brillouin.position.x = xPos;
-                    minY = min(positions.y(:));
-                    maxY = max(positions.y(:));
-                    yPos = [minY, minY, maxY, maxY, minY];
-                    Brillouin.position.y = yPos;
                 case 3
             end
             set(handles.date, 'String', Brillouin.date);
-            
-            model.Brillouin = Brillouin;
             %% Update field of view
             onFOVChange(view, model);
         catch
@@ -154,7 +119,6 @@ function onFileChange(view, model)
         end
         set(handles.date, 'String', '');
     end
-    model.Brillouin = Brillouin;
 end
 
 function onFOVChange(view, model)

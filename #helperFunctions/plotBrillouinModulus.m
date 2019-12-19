@@ -1,78 +1,113 @@
-function plotBrillouinModulus(filename, settings)
-
-    plotPath = '.';
-    
-    %% directory for the plots
-    plotDir = 'Plots';
-    if ~exist(plotDir, 'dir')
-        mkdir(plotDir);
-    end
-    barePlotDir = ['Plots' filesep 'Bare'];
-    if ~exist(barePlotDir, 'dir')
-        mkdir(barePlotDir);
-    end
-    axisPlotDir = ['Plots' filesep 'WithAxis'];
-    if ~exist(axisPlotDir, 'dir')
-        mkdir(axisPlotDir);
-    end
-
-    %% plot the measurement results
-    results = load(['EvalData' filesep filename '.mat']);
-
-    BrillouinShift = results.results.results.BrillouinShift_frequency_normalized;
-    BrillouinIntensity = results.results.results.peaksBrillouin_int;
-    LongitudinalModulus = results.results.results.longitudinalModulus;
-    validity = results.results.results.validity;
-    validityLevel = results.results.results.peaksBrillouin_dev./results.results.results.peaksBrillouin_int;
-
-    dims = {'X', 'Y', 'Z'};
-    for kk = 1:length(dims)
-        pos.([dims{kk} '_zm']) = ...
-            results.results.parameters.positions.(dims{kk});
-        pos.([dims{kk} '_zm']) = squeeze(pos.([dims{kk} '_zm']));
-    end
-    
-    %% Calculate the FOV for the RI measurements
-    nrPix = size(results.results.results.RISection, 1);
-    res = 0.2530;
-    pos.X_zm_RI = ((1:nrPix)-nrPix/2)*res;
-    pos.Y_zm_RI = pos.X_zm_RI;
-
-    %% Plot Brillouin Shift
-    % filter invalid values
-    BrillouinShift(~validity) = NaN;
-    BrillouinShift(validityLevel > settings.validityLimit) = NaN;
-
-    % average results
-    BS_mean = nanmean(BrillouinShift, 4);
-
-    names = {};
+function plotBrillouinModulus(parameters)
     try
-        masks = results.results.results.masks;
+        %% construct filename
+        filePath = [parameters.path filesep 'RawData' filesep parameters.filename '.h5'];
+        %% Open file for reading
+        file = h5bmread(filePath);
+        
+        %% Loop over all repetitions
+        ODTrepetitions = file.getRepetitions('ODT');
+        BMrepetitions = file.getRepetitions('Brillouin');
+        
+        %% Loop over all combinations of BM and ODT repetitions
+        for ll = 1:length(ODTrepetitions)
+            for jj = 1:length(BMrepetitions)
+                try
+                    %% Load alignment and modulus
+                    alignmentFilename = parameters.filename;
+                    if length(BMrepetitions) > 1
+                        alignmentFilename = [alignmentFilename '_BMrep' num2str(BMrepetitions{jj})]; %#ok<AGROW>
+                    end
+                    if length(ODTrepetitions) > 1
+                        alignmentFilename = [alignmentFilename '_ODTrep' num2str(ODTrepetitions{ll})]; %#ok<AGROW>
+                    end
+                    alignmentPath = [parameters.path filesep 'EvalData' filesep alignmentFilename '_modulus.mat'];
+                    alignment = load(alignmentPath);
+            
+                    %% plot the measurement results
+                    BMfilename = parameters.filename;
+                    if length(BMrepetitions) > 1
+                        BMfilename = [BMfilename '_rep' num2str(BMrepetitions{jj})]; %#ok<AGROW>
+                    end
+
+                    BMresults = load([parameters.path filesep 'EvalData' filesep BMfilename '.mat']);
+
+                    if isfield(BMresults.results.results, 'BrillouinShift_frequency_normalized')
+                        BrillouinShift = BMresults.results.results.BrillouinShift_frequency_normalized;
+                    else
+                        BrillouinShift = BMresults.results.results.BrillouinShift_frequency;
+                    end
+                    BrillouinIntensity = BMresults.results.results.peaksBrillouin_int;
+                    validity = BMresults.results.results.validity;
+                    validityLevel = BMresults.results.results.peaksBrillouin_dev./BMresults.results.results.peaksBrillouin_int;
+
+                    dims = {'X', 'Y', 'Z'};
+                    for kk = 1:length(dims)
+                        pos.([dims{kk} '_zm']) = ...
+                            BMresults.results.parameters.positions.(dims{kk});
+                        pos.([dims{kk} '_zm']) = squeeze(pos.([dims{kk} '_zm']));
+                    end
+                    pos.X_zm = pos.X_zm + alignment.Alignment.dx;
+                    pos.Y_zm = pos.Y_zm + alignment.Alignment.dy;
+                    pos.Z_zm = pos.Z_zm + alignment.Alignment.dz;
+
+                    %% Calculate the FOV for the RI measurements
+                    nrPix = 342;%size(BMresults.results.results.RISection, 1);
+                    res = 0.2530;
+                    pos.X_zm_RI = ((1:nrPix) - nrPix/2) * res;
+                    pos.Y_zm_RI = pos.X_zm_RI;
+
+                    %% Plot Brillouin Shift
+                    % filter invalid values
+                    BrillouinShift(~validity) = NaN;
+                    BrillouinShift(validityLevel > parameters.BM.validity) = NaN;
+
+                    % average results
+                    BS_mean = nanmean(BrillouinShift, 4);
+
+                    names = {};
+                    try
+                        masks = BMresults.results.results.masks;
+                    catch
+                        masks = {};
+                    end
+
+                    plotData(parameters.path, BS_mean, pos, parameters.BM.shift.cax, '$\nu_\mathrm{B}$ [GHz]', ...
+                        [alignmentFilename '_shift'], 0, masks, names);
+                    plotData(parameters.path, BS_mean, pos, parameters.BM.shift.cax, '$\nu_\mathrm{B}$ [GHz]', ...
+                        [alignmentFilename '_shift_outline'], 1, masks, names);
+
+                    %% Plot Brillouin intensity
+                    % filter invalid values
+                    BrillouinIntensity(~validity) = NaN;
+                    BrillouinIntensity(validityLevel > parameters.BM.validity) = NaN;
+
+                    % average results
+                    BI_mean = nanmean(BrillouinIntensity, 4);
+                    BI_mean = BI_mean./max(BI_mean(:));
+
+                    plotData(parameters.path, BI_mean, pos, parameters.BM.intensity.cax, '$I$ [a.u.]', ...
+                        [alignmentFilename '_int'], 0, masks, names);
+
+                    %% Plot longitudinal modulus
+                    M = 1e-9*alignment.modulus.M;
+
+                    % filter invalid values
+                    M(~validity) = NaN;
+                    M(validityLevel > parameters.Modulus.validity) = NaN;
+                    
+                    M_mean = nanmean(M, 4);
+
+                    plotData(parameters.path, M_mean, pos, parameters.Modulus.M.cax, ...
+                        '$M$ [GPa]', [alignmentFilename '_modulus'], 0, masks, names);
+                catch
+                end
+            end
+        end
+        
+        h5bmclose(file);
     catch
-        masks = {};
     end
-
-    plotData(plotPath, BS_mean, pos, settings.cax.shift, '$\nu_\mathrm{B}$ [GHz]', filename, 0, masks, names);
-    plotData(plotPath, BS_mean, pos, settings.cax.shift, '$\nu_\mathrm{B}$ [GHz]', [filename '_outline'], 1, masks, names);
-
-    %% Plot Brillouin intensity
-    % filter invalid values
-    BrillouinIntensity(~validity) = NaN;
-    BrillouinIntensity(validityLevel > settings.validityLimit) = NaN;
-
-    % average results
-    BI_mean = nanmean(BrillouinIntensity, 4);
-    BI_mean = BI_mean./max(BI_mean(:));
-
-    plotData(plotPath, BI_mean, pos, settings.cax.int, '$I$ [a.u.]', [filename '_int'], 0, masks, names);
-
-    %% Plot longitudinal modulus
-    % filter invalid values
-    LongitudinalModulus(~validity) = NaN;
-    LongitudinalModulus(validityLevel > settings.validityLimit) = NaN;
-
-    plotData(plotPath, LongitudinalModulus, pos, settings.cax.lm, '$M$ [GPa]', [filename '_longitudinalModulus'], 0, masks, names);
     
     function plotData(plotPath, data, pos, cax, colorbarTitle, filename, showOutline, masks, names)
         
@@ -97,7 +132,7 @@ function plotBrillouinModulus(filename, settings)
         end
         axis equal;
         axis([min(pos.X_zm(:)), max(pos.X_zm(:)), min(pos.Y_zm(:)), max(pos.Y_zm(:))]);
-        caxis([cax.min cax.max]);
+        caxis(cax);
         cb = colorbar;
         title(cb, colorbarTitle, 'interpreter', 'latex');
         view([0 90]);
@@ -134,15 +169,15 @@ function plotBrillouinModulus(filename, settings)
         pixelValues = fliplr(pixelValues);
 
         % set caxis for png image
-        pixelValues(pixelValues < cax.min) = cax.min;
-        pixelValues(pixelValues > cax.max) = cax.max;
+        pixelValues(pixelValues < cax(1)) = cax(1);
+        pixelValues(pixelValues > cax(2)) = cax(2);
 
         % transparency matrix
         transparent = double(~isnan(pixelValues));
 
         % scale image values to 'bitdepth' bit
-        pixelValues = pixelValues - cax.min;
-        pixelValues = round(2^8*pixelValues/(cax.max-cax.min));
+        pixelValues = pixelValues - cax(1);
+        pixelValues = round(2^8*pixelValues/(cax(2)-cax(1)));
 
         map = parula(2^8);
         RGB = ind2rgb(pixelValues, map);

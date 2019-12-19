@@ -7,11 +7,14 @@ function Modulus(view, model)
 
     % observe on model changes and update view accordingly
     % (tie listener to model object lifecycle)
-    addlistener(model, 'Brillouin', 'PostSet', ...
+    addlistener(model, 'modulus', 'PostSet', ...
         @(o,e) onFileChange(view, e.AffectedObject));
-    
-    addlistener(model, 'ODT', 'PostSet', ...
-        @(o,e) onFileChange(view, e.AffectedObject));
+%     
+%     addlistener(model, 'ODT', 'PostSet', ...
+%         @(o,e) onFileChange(view, e.AffectedObject));
+%     
+%     addlistener(model, 'Alignment', 'PostSet', ...
+%         @(o,e) onFileChange(view, e.AffectedObject));
     
     addlistener(model, 'parameters', 'PostSet', ...
         @(o,e) onFOVChange(view, e.AffectedObject));
@@ -24,10 +27,45 @@ function initGUI(~, view)
     axis(axesImage, 'equal');
     box(axesImage, 'on');
     
+    modulusGroup = uipanel('Parent', parent, 'Title', 'Modulus parameters', 'FontSize', 11,...
+             'Position', [.36 .055 .2 .35]);
+    
+    uicontrol('Parent', modulusGroup, 'Style', 'text', 'String', 'Refractive index n of the medium [1]:', 'Units', 'normalized',...
+        'Position', [0.05,0.83,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    n0 = uicontrol('Parent', modulusGroup, 'Style', 'edit', 'Units', 'normalized',...
+        'Position', [0.6,0.85,0.35,0.1], 'FontSize', 11, 'HorizontalAlignment', 'center', 'Tag', 'floor');
+    
+    uicontrol('Parent', modulusGroup, 'Style', 'text', 'String', 'Refractive index increment [ml/g]:', 'Units', 'normalized',...
+        'Position', [0.05,0.66,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    alpha = uicontrol('Parent', modulusGroup, 'Style', 'edit', 'Units', 'normalized',...
+        'Position', [0.6,0.68,0.35,0.1], 'FontSize', 11, 'HorizontalAlignment', 'center', 'Tag', 'floor');
+    
+    uicontrol('Parent', modulusGroup, 'Style', 'text', 'String', 'Absolute density of the medium [g/ml]:', 'Units', 'normalized',...
+        'Position', [0.05,0.49,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    rho0 = uicontrol('Parent', modulusGroup, 'Style', 'edit', 'Units', 'normalized',...
+        'Position', [0.6,0.51,0.35,0.1], 'FontSize', 11, 'HorizontalAlignment', 'center', 'Tag', 'floor');
+    
+    uicontrol('Parent', modulusGroup, 'Style', 'text', 'String', 'Use absolute density of dry fraction', 'Units', 'normalized',...
+        'Position', [0.05,0.32,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    useDryDensity = uicontrol('Parent', modulusGroup, 'Style', 'checkbox', 'Units', 'normalized',...
+        'Position', [0.89,0.34,0.14,0.1], 'FontSize', 11, 'HorizontalAlignment', 'left', 'tag', 'Borders');
+    
+    rho_dry_label = uicontrol('Parent', modulusGroup, 'Style', 'text', 'String', 'Absolute density of the dry fraction [g/ml]:', 'Units', 'normalized',...
+        'Position', [0.05,0.15,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left', 'enable', 'off');
+    rho_dry = uicontrol('Parent', modulusGroup, 'Style', 'edit', 'Units', 'normalized',...
+        'Position', [0.6,0.17,0.35,0.1], 'FontSize', 11, 'HorizontalAlignment', 'center', 'Tag', 'floor', 'enable', 'off');
+    
     %% Return handles
     view.Modulus = struct(...
         'plot', NaN, ...
-        'axesImage', axesImage ...
+        'axesImage', axesImage, ...
+        'modulusGroup', modulusGroup, ...
+        'n0', n0, ...
+        'alpha', alpha, ...
+        'rho0', rho0, ...
+        'useDryDensity', useDryDensity, ...
+        'rho_dry_label', rho_dry_label, ...
+        'rho_dry', rho_dry ...
 	);
 end
 
@@ -38,33 +76,27 @@ end
 
 function onFileChange(view, model)
     Brillouin =  model.Brillouin;
-    ODT =  model.ODT;
-    modulus =  model.modulus;
-    handles = view.Modulus;
+    Alignment =  model.Alignment;
     
-    if ~(isempty(Brillouin.repetitions) || isempty(ODT.repetitions))
+    set(view.Modulus.n0, 'String', model.modulus.n0);
+    set(view.Modulus.alpha, 'String', model.modulus.alpha);
+    set(view.Modulus.rho0, 'String', model.modulus.rho0);
+    set(view.Modulus.rho_dry, 'String', model.modulus.rho_dry);
+    
+    set(view.Modulus.useDryDensity, 'value', model.modulus.useDryDensity);
+    if model.modulus.useDryDensity
+        set(view.Modulus.rho_dry_label, 'enable', 'on');
+        set(view.Modulus.rho_dry, 'enable', 'on');
+    else
+        set(view.Modulus.rho_dry_label, 'enable', 'off');
+        set(view.Modulus.rho_dry, 'enable', 'off');
+    end
+        
+    
+    if ~(isempty(Brillouin.repetitions) || isempty(model.ODT.repetitions))
         try
-            ax = handles.axesImage;
-            
-            positions = Brillouin.positions;
-            
-            BS = nanmean(Brillouin.shift, 4);
-            
-            
-            if (ODT.maxProj)
-                RI = interp2(ODT.positions.x(:,:,1), ODT.positions.y(:,:,1), max(real(ODT.data.Reconimg), [], 3), positions.x(:,:,1), positions.y(:,:,1));
-            else
-                RI = interp3(ODT.positions.x, ODT.positions.y, ODT.positions.z, ODT.data.Reconimg, positions.x, positions.y, ODT.zDepth*ones(size(positions.z)));
-            end
-            
-            % calculate density
-            rho = (RI - modulus.n0)/modulus.alpha + modulus.rho0;
-            rho = 1e3*rho;      % [kg/m^3]  density of the sample
-            
-            zeta = (2*cos(Brillouin.setup.theta/2) * RI) ./ (Brillouin.setup.lambda * sqrt(rho));
-
-            % calculate M'
-            modulus = (1e9*BS./zeta).^2;
+            ax = view.Modulus.axesImage;
+            positions = Brillouin.positions;            
             
             if ishandle(view.Modulus.plot)
                 delete(view.Modulus.plot)
@@ -73,17 +105,19 @@ function onFileChange(view, model)
                 case 0
                 case 1
                     %% one dimensional case
-                    d = 1e-9*squeeze(modulus);
+                    M = nanmean(model.modulus.M, 4);
+                    d = 1e-9*squeeze(M);
                     p = squeeze(positions.(Brillouin.nsdims{1}));
                     view.Modulus.plot = plot(ax, p, d, 'marker', 'x');
                     xlim([min(p(:)), max(p(:))]);
                     ylim([min(d(:)), max(d(:))]);
                 case 2
                     %% two dimensional case
-                    d = 1e-9*squeeze(modulus);
-                    pos.x = squeeze(positions.x);
-                    pos.y = squeeze(positions.y);
-                    pos.z = squeeze(positions.z);
+                    M = nanmean(model.modulus.M, 4);
+                    d = 1e-9*squeeze(M);
+                    pos.x = squeeze(positions.x) + Alignment.dx;
+                    pos.y = squeeze(positions.y) + Alignment.dy;
+                    pos.z = squeeze(positions.z) + Alignment.dz;
                     
                     view.Modulus.plot = imagesc(ax, pos.(Brillouin.nsdims{2})(1,:), pos.(Brillouin.nsdims{1})(:,1), d);
                     axis(ax, 'equal');

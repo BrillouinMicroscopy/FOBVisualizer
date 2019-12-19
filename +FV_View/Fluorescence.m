@@ -10,11 +10,11 @@ function Fluorescence(view, model)
     addlistener(model, 'Fluorescence', 'PostSet', ...
         @(o,e) onFileChange(view, e.AffectedObject));
     
+    addlistener(model, 'Alignment', 'PostSet', ...
+        @(o,e) onAlignment(view, e.AffectedObject));
+    
     addlistener(model, 'parameters', 'PostSet', ...
         @(o,e) onFOVChange(view, e.AffectedObject));
-    
-    addlistener(model, 'Brillouin', 'PostSet', ...
-        @(o,e) onBrillouinChange(view, e.AffectedObject));
 end
 
 function initGUI(~, view)
@@ -127,7 +127,7 @@ function onFileChange(view, model)
 %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
             set(ax, 'yDir', 'normal');
             onFOVChange(view, model);
-            onBrillouinChange(view, model);
+            onAlignment(view, model);
         catch
             if ishandle(view.Fluorescence.plot)
                 delete(view.Fluorescence.plot)
@@ -156,17 +156,19 @@ function onFOVChange(view, model)
     end
 end
 
-function onBrillouinChange(view, model)
+function onAlignment(view, model)
     if ~isempty(model.Fluorescence.repetitions)
         ax = view.Fluorescence.axesImage;
         hold(ax, 'on');
         if ishandle(view.Fluorescence.positionPlot)
             delete(view.Fluorescence.positionPlot)
         end
-        if length(model.Brillouin.position.x) == 1
-            view.Fluorescence.positionPlot = plot(ax, model.Brillouin.position.x, model.Brillouin.position.y, 'color', 'red', 'linewidth', 1.5, 'marker', 'o');
+        if length(model.Alignment.position.x) == 1
+            view.Fluorescence.positionPlot = plot(ax, model.Alignment.position.x + model.Alignment.dx, model.Alignment.position.y + model.Alignment.dy, ...
+                'color', 'red', 'linewidth', 1.5, 'marker', 'o');
         else
-            view.Fluorescence.positionPlot = plot(ax, model.Brillouin.position.x, model.Brillouin.position.y, 'color', 'red', 'linewidth', 1.5);
+            view.Fluorescence.positionPlot = plot(ax, model.Alignment.position.x + model.Alignment.dx, model.Alignment.position.y + model.Alignment.dy, ...
+                'color', 'red', 'linewidth', 1.5);
         end
     end
 end
