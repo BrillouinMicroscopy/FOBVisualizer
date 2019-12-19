@@ -38,12 +38,14 @@ function plotCombinedFluorescence(parameters)
         for jj = 1:length(FluoRepetitions)
             fluorescence = uint8(zeros(1024, 1024, 3));
             channels = file.readPayloadData('Fluorescence', FluoRepetitions{jj}, 'memberNames');
+            exportPlot = false;
             for ll = 1:length(channels)
                 channel = file.readPayloadData('Fluorescence', FluoRepetitions{jj}, 'channel', channels{ll});
                 % If it is a brightfield image, skip it
                 if strcmpi('brightfield', channel)
                     continue;
                 end
+                exportPlot = true;
 
                 % Check if the channel is contained in the requested
                 % combinations
@@ -62,10 +64,12 @@ function plotCombinedFluorescence(parameters)
                     fluorescence(:, :, ind) = uint8(temp ./ max(temp(:)) * 255);
                 end
             end
-
-            fluorescence = flipud(fluorescence);
-            imwrite(fluorescence, [parameters.path filesep 'Plots' filesep 'Bare' filesep ...
-                parameters.filename '_FLrep' num2str(FluoRepetitions{jj}) '_fluorescenceCombined_' combination '.png'], 'BitDepth', 8);
+            
+            if exportPlot
+                fluorescence = flipud(fluorescence);
+                imwrite(fluorescence, [parameters.path filesep 'Plots' filesep 'Bare' filesep ...
+                    parameters.filename '_FLrep' num2str(FluoRepetitions{jj}) '_fluorescenceCombined_' combination '.png'], 'BitDepth', 8);
+            end
         end
     end
 end
