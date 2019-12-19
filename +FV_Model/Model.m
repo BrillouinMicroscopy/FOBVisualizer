@@ -68,6 +68,9 @@ classdef Model < handle
             'n0', 1.335, ...        % [1]    refractive index of PBS
             'alpha', 0.18, ...      % [ml/g] refraction increment
             'rho0', 1, ...          % [g/ml] density of PBS
+            'useDryDensity', false, ...    % [boolean] whether the absolute density of the dry mass should be considered
+            'rho_dry', 1.35, ...    % [g/ml] absolute density of the dry fraction, 1/rho_dry = \bar{\nu}_\mathrm{dry} in
+            ...                     %        https://doi.org/10.1016/j.bpj.2018.07.027
             'M', NaN ...
         );
         defaultAlignment = struct( ...

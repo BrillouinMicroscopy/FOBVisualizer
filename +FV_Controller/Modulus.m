@@ -1,7 +1,13 @@
-function callbacks = Modulus(model, ~)
+function callbacks = Modulus(model, view)
 %% DATA Controller
     
     %% general panel
+    set(view.Modulus.n0, 'Callback', {@setValue, model, 'n0'});
+    set(view.Modulus.alpha, 'Callback', {@setValue, model, 'alpha'});
+    set(view.Modulus.rho0, 'Callback', {@setValue, model, 'rho0'});
+    
+    set(view.Modulus.useDryDensity, 'Callback', {@toggleUseDryDensity, model, view});
+    set(view.Modulus.rho_dry, 'Callback', {@setValue, model, 'rho_dry'});
 
     callbacks = struct( ...
         'calculateModulus', @()calculateModulus(model) ...
@@ -25,8 +31,15 @@ function calculateModulus(model)
             
             RI = repmat(RI, 1, 1, 1, size(Brillouin.shift, 4));
 
-            % calculate density
-            rho = (RI - modulus.n0)/modulus.alpha + modulus.rho0;
+            %% Calculate density
+            % If requested, we use the absolute density of the dry fraction
+            % to calculate the density, otherwise we neglect the
+            % contribution.
+            if modulus.useDryDensity
+                rho = (RI - modulus.n0)/modulus.alpha + modulus.rho0 * (1 - (RI - modulus.n0)/modulus.alpha / modulus.rho_dry);
+            else
+                rho = (RI - modulus.n0)/modulus.alpha + modulus.rho0;
+            end
             rho = 1e3*rho;      % [kg/m^3]  density of the sample
 
             zeta = (2*cos(Brillouin.setup.theta/2) * RI) ./ (Brillouin.setup.lambda * sqrt(rho));
@@ -54,4 +67,14 @@ function calculateModulus(model)
         catch
         end
     end
+end
+
+function setValue(src, ~, model, value)
+    model.modulus.(value) = str2double(get(src, 'String'));
+    calculateModulus(model);
+end
+
+function toggleUseDryDensity(~, ~, model, view)
+    model.modulus.useDryDensity = get(view.Modulus.useDryDensity, 'Value');
+    calculateModulus(model);
 end

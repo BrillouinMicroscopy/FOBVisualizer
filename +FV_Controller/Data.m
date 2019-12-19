@@ -105,6 +105,12 @@ function loadAlignmentData(model)
         Alignment = model.defaultAlignment;
         modulus = model.defaultModulus;
     end
+    if ~isfield(modulus, 'rho_dry')
+        modulus.rho_dry = model.defaultModulus.rho_dry;
+    end
+    if ~isfield(modulus, 'useDryDensity')
+        modulus.useDryDensity = model.defaultModulus.useDryDensity;
+    end
     model.modulus = modulus;
     model.controllers.Brillouin.extractAlignment(Alignment);
     model.controllers.modulus.calculateModulus();
