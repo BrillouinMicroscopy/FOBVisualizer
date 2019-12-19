@@ -65,7 +65,7 @@ function plotCombinedFluorescence(parameters)
 
             fluorescence = flipud(fluorescence);
             imwrite(fluorescence, [parameters.path filesep 'Plots' filesep 'Bare' filesep ...
-                parameters.filename '_rep' num2str(FluoRepetitions{jj}) '_fluorescenceCombined_' combination '.png'], 'BitDepth', 8);
+                parameters.filename '_FLrep' num2str(FluoRepetitions{jj}) '_fluorescenceCombined_' combination '.png'], 'BitDepth', 8);
         end
     end
 end

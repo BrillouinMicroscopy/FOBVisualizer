@@ -16,7 +16,7 @@ function plotFluorescence(parameters)
                 image = flipud(image);
                 %% Construct image path
                 imagePath = [parameters.path filesep 'Plots' filesep parameters.filename ...
-                    sprintf('_rep%01d_channel%s', ii-1, channel) '.png'];
+                    sprintf('_FLrep%01d_channel%s', ii-1, channel) '.png'];
                 switch (channel)
                     case 'Brightfield'
                         nrValues = 256;
