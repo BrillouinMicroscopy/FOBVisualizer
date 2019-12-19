@@ -48,10 +48,11 @@ function plotCombinedFluorescence(parameters)
                 % Check if the channel is contained in the requested
                 % combinations
                 ind = strfind(combination, lower(channel(1)));
+                backgroundInd = strfind('rgb', lower(channel(1)));
                 if ~isempty(ind)
                     img = file.readPayloadData('Fluorescence', FluoRepetitions{jj}, 'data', channels{ll});
 
-                    temp = uint8(img) - background(:, :, ind);
+                    temp = uint8(img) - background(:, :, backgroundInd);
 
                     temp = temp - mean2(temp(end-15:end-5, 5:15));
                     temp = conv2(temp, fspecial('disk', 2), 'same');
