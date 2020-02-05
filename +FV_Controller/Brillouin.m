@@ -80,7 +80,7 @@ function loadRepetition(model, repetition)
     
     model.Brillouin = Brillouin;
     extractAlignment(model);
-    model.controllers.modulus.calculateModulus();
+    model.controllers.density.calculateDensity();
 end
 
 function extractAlignment(model, Alignment)

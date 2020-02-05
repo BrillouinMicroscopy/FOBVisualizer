@@ -23,49 +23,14 @@ end
 function initGUI(~, view)
     parent = view.Modulus.parent;
     
-    axesImage = axes('Parent', parent, 'Position', [0.03 .055 .26 .34]);
+    axesImage = axes('Parent', parent, 'Position', [0.69 .055 .26 .34]);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
-    
-    modulusGroup = uipanel('Parent', parent, 'Title', 'Modulus parameters', 'FontSize', 11,...
-             'Position', [.36 .055 .2 .35]);
-    
-    uicontrol('Parent', modulusGroup, 'Style', 'text', 'String', 'Refractive index n of the medium [1]:', 'Units', 'normalized',...
-        'Position', [0.05,0.83,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    n0 = uicontrol('Parent', modulusGroup, 'Style', 'edit', 'Units', 'normalized',...
-        'Position', [0.6,0.85,0.35,0.1], 'FontSize', 11, 'HorizontalAlignment', 'center', 'Tag', 'floor');
-    
-    uicontrol('Parent', modulusGroup, 'Style', 'text', 'String', 'Refractive index increment [ml/g]:', 'Units', 'normalized',...
-        'Position', [0.05,0.66,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    alpha = uicontrol('Parent', modulusGroup, 'Style', 'edit', 'Units', 'normalized',...
-        'Position', [0.6,0.68,0.35,0.1], 'FontSize', 11, 'HorizontalAlignment', 'center', 'Tag', 'floor');
-    
-    uicontrol('Parent', modulusGroup, 'Style', 'text', 'String', 'Absolute density of the medium [g/ml]:', 'Units', 'normalized',...
-        'Position', [0.05,0.49,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    rho0 = uicontrol('Parent', modulusGroup, 'Style', 'edit', 'Units', 'normalized',...
-        'Position', [0.6,0.51,0.35,0.1], 'FontSize', 11, 'HorizontalAlignment', 'center', 'Tag', 'floor');
-    
-    uicontrol('Parent', modulusGroup, 'Style', 'text', 'String', 'Use absolute density of dry fraction', 'Units', 'normalized',...
-        'Position', [0.05,0.32,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    useDryDensity = uicontrol('Parent', modulusGroup, 'Style', 'checkbox', 'Units', 'normalized',...
-        'Position', [0.89,0.34,0.14,0.1], 'FontSize', 11, 'HorizontalAlignment', 'left', 'tag', 'Borders');
-    
-    rho_dry_label = uicontrol('Parent', modulusGroup, 'Style', 'text', 'String', 'Absolute density of the dry fraction [g/ml]:', 'Units', 'normalized',...
-        'Position', [0.05,0.15,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left', 'enable', 'off');
-    rho_dry = uicontrol('Parent', modulusGroup, 'Style', 'edit', 'Units', 'normalized',...
-        'Position', [0.6,0.17,0.35,0.1], 'FontSize', 11, 'HorizontalAlignment', 'center', 'Tag', 'floor', 'enable', 'off');
     
     %% Return handles
     view.Modulus = struct(...
         'plot', NaN, ...
-        'axesImage', axesImage, ...
-        'modulusGroup', modulusGroup, ...
-        'n0', n0, ...
-        'alpha', alpha, ...
-        'rho0', rho0, ...
-        'useDryDensity', useDryDensity, ...
-        'rho_dry_label', rho_dry_label, ...
-        'rho_dry', rho_dry ...
+        'axesImage', axesImage ...
 	);
 end
 
@@ -77,21 +42,6 @@ end
 function onFileChange(view, model)
     Brillouin =  model.Brillouin;
     Alignment =  model.Alignment;
-    
-    set(view.Modulus.n0, 'String', model.modulus.n0);
-    set(view.Modulus.alpha, 'String', model.modulus.alpha);
-    set(view.Modulus.rho0, 'String', model.modulus.rho0);
-    set(view.Modulus.rho_dry, 'String', model.modulus.rho_dry);
-    
-    set(view.Modulus.useDryDensity, 'value', model.modulus.useDryDensity);
-    if model.modulus.useDryDensity
-        set(view.Modulus.rho_dry_label, 'enable', 'on');
-        set(view.Modulus.rho_dry, 'enable', 'on');
-    else
-        set(view.Modulus.rho_dry_label, 'enable', 'off');
-        set(view.Modulus.rho_dry, 'enable', 'off');
-    end
-        
     
     if ~(isempty(Brillouin.repetitions) || isempty(model.ODT.repetitions))
         try

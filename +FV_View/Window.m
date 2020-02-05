@@ -26,12 +26,14 @@ function initGUI(model, view)
     view.ODT.parent = f;
     view.Fluorescence.parent = f;
     view.Brillouin.parent = f;
+    view.Density.parent = f;
     view.Modulus.parent = f;
     
     FV_View.Data(view, model);
     FV_View.ODT(view, model);
     FV_View.Fluorescence(view, model);
     FV_View.Brillouin(view, model);
+    FV_View.Density(view, model);
     FV_View.Modulus(view, model);
                  
     % Assign the name to appear in the window title.

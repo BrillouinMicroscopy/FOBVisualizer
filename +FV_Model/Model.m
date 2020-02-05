@@ -13,6 +13,7 @@ classdef Model < handle
         Brillouin;          % parameters of the Brillouin measurement
         Fluorescence;       % parameters of the Fluorescence measurement
         modulus;            % parameters of the longitudinal modulus calculation
+        density;            % parameters of the density
         Alignment;          % parameters of the spatial alignment for ODT and BM
         ODT;                % parameters of the ODT measurement
     end
@@ -64,14 +65,18 @@ classdef Model < handle
                 'z', [] ...
             ) ...
         );
-        defaultModulus = struct( ...
+        defaultDensity = struct( ...
             'n0', 1.335, ...        % [1]    refractive index of PBS
             'alpha', 0.18, ...      % [ml/g] refraction increment
             'rho0', 1, ...          % [g/ml] density of PBS
             'useDryDensity', false, ...    % [boolean] whether the absolute density of the dry mass should be considered
             'rho_dry', 1.35, ...    % [g/ml] absolute density of the dry fraction, 1/rho_dry = \bar{\nu}_\mathrm{dry} in
             ...                     %        https://doi.org/10.1016/j.bpj.2018.07.027
-            'M', NaN ...
+            'rho', NaN ...
+        );
+        defaultModulus = struct( ...
+            'M', NaN, ...
+            'M_woRI', NaN ...
         );
         defaultAlignment = struct( ...
             'position', struct( ...
@@ -97,6 +102,7 @@ classdef Model < handle
             obj.Brillouin = obj.defaultBrillouin();
             obj.Fluorescence = obj.defaultFluorescence();
             obj.ODT = obj.defaultODT();
+            obj.density = obj.defaultDensity();
             obj.modulus = obj.defaultModulus();
             obj.Alignment = obj.defaultAlignment();
             obj.parameters = obj.defaultParameters();
@@ -107,6 +113,7 @@ classdef Model < handle
             obj.Brillouin = obj.defaultBrillouin();
             obj.Fluorescence = obj.defaultFluorescence();
             obj.ODT = obj.defaultODT();
+            obj.density = obj.defaultDensity();
             obj.modulus = obj.defaultModulus();
             obj.Alignment = obj.defaultAlignment();
             obj.parameters = obj.defaultParameters();

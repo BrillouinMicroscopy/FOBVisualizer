@@ -90,8 +90,9 @@ function selectSaveData(~, ~, model)
     
     Alignment = model.Alignment;
     modulus = model.modulus;
+    density = model.density;
     programVersion = model.programVersion;
-    save(filepath, 'Alignment', 'modulus', 'programVersion');
+    save(filepath, 'Alignment', 'modulus', 'programVersion', 'density');
 end
 
 function loadAlignmentData(model)
@@ -101,19 +102,36 @@ function loadAlignmentData(model)
         data = load(filepath, 'Alignment', 'modulus');
         Alignment = data.Alignment;
         modulus = data.modulus;
+        %% Try to load density data
+        try
+            density = data.density;
+        % Migrate if that fails
+        catch
+            density = modulus;
+            if isfield(density, 'M')
+                modulus = struct( ...
+                    'M', density.M, ...
+                    'M_woRI', density.M_woRI ...
+                );
+                density = rmfield(density, 'M');
+                density = rmfield(density, 'M_woRI');
+            end
+        end
     else
         Alignment = model.defaultAlignment;
         modulus = model.defaultModulus;
+        density = model.defaultDensity;
     end
-    if ~isfield(modulus, 'rho_dry')
-        modulus.rho_dry = model.defaultModulus.rho_dry;
+    if ~isfield(density, 'rho_dry')
+        density.rho_dry = model.defaultDensity.rho_dry;
     end
-    if ~isfield(modulus, 'useDryDensity')
-        modulus.useDryDensity = model.defaultModulus.useDryDensity;
+    if ~isfield(density, 'useDryDensity')
+        density.useDryDensity = model.defaultDensity.useDryDensity;
     end
     model.modulus = modulus;
+    model.density = density;
     model.controllers.Brillouin.extractAlignment(Alignment);
-    model.controllers.modulus.calculateModulus();
+    model.controllers.density.calculateDensity();
 end
 
 function filepath = constructAlignmentFilepath(model)
