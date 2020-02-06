@@ -99,7 +99,7 @@ function loadAlignmentData(model)
     filepath = constructAlignmentFilepath(model);
     
     if exist(filepath, 'file')
-        data = load(filepath, 'Alignment', 'modulus');
+        data = load(filepath, 'Alignment', 'modulus', 'density');
         Alignment = data.Alignment;
         modulus = data.modulus;
         %% Try to load density data
@@ -127,6 +127,9 @@ function loadAlignmentData(model)
     end
     if ~isfield(density, 'useDryDensity')
         density.useDryDensity = model.defaultDensity.useDryDensity;
+    end
+    if ~isfield(density, 'masks')
+        density.masks = struct();
     end
     model.modulus = modulus;
     model.density = density;

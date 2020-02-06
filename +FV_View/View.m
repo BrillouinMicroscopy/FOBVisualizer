@@ -12,7 +12,8 @@ classdef View < handle
         help;
         figure;
         menubar;
-        Alignment
+        Alignment;
+        DensityMasking;
     end
 
     methods

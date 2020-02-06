@@ -42,6 +42,10 @@ function closeGUI(~, ~, model, view, controllers)
         close(view.Alignment.parent);
         delete(view.Alignment.parent);
     end
+    if isfield(view.DensityMasking, 'parent') && ishandle(view.DensityMasking.parent)
+        close(view.DensityMasking.parent);
+        delete(view.DensityMasking.parent);
+    end
     controllers.data.closeFile();
     model.log.write('=====================================================');
     model.log.log('V/FOBVisualizer: Closed program.');

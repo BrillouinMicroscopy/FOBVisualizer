@@ -16,6 +16,7 @@ classdef Model < handle
         density;            % parameters of the density
         Alignment;          % parameters of the spatial alignment for ODT and BM
         ODT;                % parameters of the ODT measurement
+        tmp;                % temporary data
     end
     properties (Constant)
         programVersion = getProgramVersion();
@@ -72,6 +73,8 @@ classdef Model < handle
             'useDryDensity', false, ...    % [boolean] whether the absolute density of the dry mass should be considered
             'rho_dry', 1.35, ...    % [g/ml] absolute density of the dry fraction, 1/rho_dry = \bar{\nu}_\mathrm{dry} in
             ...                     %        https://doi.org/10.1016/j.bpj.2018.07.027
+            'masks', struct(), ...  %        masks for the density
+            ...                     %        in case the two-substance mixture model cannot be applied
             'rho', NaN ...
         );
         defaultModulus = struct( ...
@@ -106,6 +109,7 @@ classdef Model < handle
             obj.modulus = obj.defaultModulus();
             obj.Alignment = obj.defaultAlignment();
             obj.parameters = obj.defaultParameters();
+            obj.tmp = struct();
         end
         %% Function to reset the model
         function reset(obj)
@@ -117,6 +121,7 @@ classdef Model < handle
             obj.modulus = obj.defaultModulus();
             obj.Alignment = obj.defaultAlignment();
             obj.parameters = obj.defaultParameters();
+            obj.tmp = struct();
         end
     end
 end

@@ -8,6 +8,8 @@ function callbacks = Density(model, view)
     
     set(view.Density.useDryDensity, 'Callback', {@toggleUseDryDensity, model, view});
     set(view.Density.rho_dry, 'Callback', {@setValue, model, 'rho_dry'});
+    
+    set(view.Density.openMasking, 'Callback', {@openMasking, view, model});
 
     callbacks = struct( ...
         'calculateDensity', @()calculateDensity(model) ...
@@ -28,8 +30,6 @@ function calculateDensity(model)
             %% Calculate the absolute density from the measured RI
             RI = interp3(ODT.positions.x, ODT.positions.y, ODT.positions.z, ODT.data.Reconimg, ...
                 Alignment.dx + positions.x, Alignment.dy + positions.y, Alignment.dz + positions.z);
-            
-            RI = repmat(RI, 1, 1, 1, size(Brillouin.shift, 4));
 
             %% Calculate density
             % If requested, we use the absolute density of the dry fraction
@@ -40,7 +40,49 @@ function calculateDensity(model)
             else
                 rho = (RI - density.n0)/density.alpha + density.rho0;
             end
+            
+            %% Apply density masks
+            masks = model.density.masks;
+            masksFields = fields(masks);
+            m_sum = zeros(size(density.rho,1), size(density.rho,2));
+            for jj = 1:length(masksFields)
+                mask = masks.(masksFields{jj});
+                if ~mask.active
+                    continue
+                end
+                switch (mask.parameter)
+                    case 'Refractive index'
+                        m = ones(size(RI));
+                        m(RI > mask.max | RI < mask.min) = 0;
+                        m = imgaussfilt(m,0.5);
+                    case 'Brillouin shift'
+                        BS = nanmean(model.Brillouin.shift, 4);
+                        m = ones(size(BS));
+                        m(BS > mask.max | BS < mask.min) = 0;
+                        m = imgaussfilt(m,0.5);
+                    otherwise
+                        m = zeros(size(density.rho,1), size(density.rho,2));
+                end
+                masks.(masksFields{jj}).m = m;
+                m_sum = m_sum + m;
+            end
+            m0 = 1 - m_sum;
+            m0(m0 < 0) = 0;
+            rho = m0 .* rho;
+            norm = m_sum + m0;
+            for jj = 1:length(masksFields)
+                mask = masks.(masksFields{jj});
+                if ~mask.active
+                    continue
+                end
+                weight = mask.m./ norm;
+                rho = rho + weight .* mask.density;
+            end
+            
             rho = 1e3*rho;      % [kg/m^3]  density of the sample
+            
+            rho = repmat(rho, 1, 1, 1, size(Brillouin.shift, 4));
+            RI = repmat(RI, 1, 1, 1, size(Brillouin.shift, 4));
 
             %% Save to structure
             density.RI = RI;
@@ -64,4 +106,25 @@ end
 function toggleUseDryDensity(~, ~, model, view)
     model.density.useDryDensity = get(view.Density.useDryDensity, 'Value');
     calculateDensity(model);
+end
+
+function openMasking(~, ~, view, model)    
+    if isfield(view.DensityMasking, 'parent') && ishandle(view.DensityMasking.parent)
+        figure(view.DensityMasking.parent);
+        return;
+    end
+    
+    % open it centered over main figure
+    pos = view.figure.Position;
+    parent = figure('Position', [pos(1) + pos(3)/2 - 450, pos(2) + pos(4)/2 - 325, 900, 650]);
+    % hide the menubar and prevent resizing
+    set(parent, 'menubar', 'none', 'Resize','off', 'units', 'pixels');
+    
+    view.DensityMasking.parent = parent;
+
+    model.tmp.masks = model.density.masks;
+    model.tmp.selectedMask = 1;
+    FV_View.DensityMasking(view, model);
+
+    FV_Controller.DensityMasking(model, view);
 end
