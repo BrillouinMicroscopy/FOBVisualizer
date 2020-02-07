@@ -24,7 +24,15 @@ function initGUI(view, model)
     axis(axesImage, 'equal');
     box(axesImage, 'on');
     
-    fluorescence = {'red', 'green'};
+    fluorescence = cell(0,0);
+    reps = model.Fluorescence.repetitions;
+    for jj = 1:length(reps)
+        channels = model.file.readPayloadData('Fluorescence', model.Fluorescence.repetitions{jj}, 'memberNames');
+        for kk = 1:length(channels)
+            type = model.file.readPayloadData('Fluorescence', model.Fluorescence.repetitions{jj}, 'channel', channels{kk});
+            fluorescence{end+1} = [sprintf('Fl. rep. %01.0d, ', jj) type]; %#ok<AGROW>
+        end
+    end
     
     masksTable = uitable('Parent', parent, 'Units', 'normalized', 'Position', [0.02 0.15 0.4 0.8], ...
         'ColumnWidth', {96, 50, 50, 90, 50}, 'ColumnName', {'Parameter', 'Min', 'Max', 'Density [g/ml]', 'active'}, ...
@@ -103,8 +111,57 @@ function updatePlot(view, model)
             cb = colorbar(ax);
             ylabel(cb, '$\nu_\mathrm{B}$ [GHz]', 'interpreter', 'latex');
         otherwise
-            if ishandle(view.DensityMasking.plot)
-                delete(view.DensityMasking.plot);
+            try
+                reps = model.Fluorescence.repetitions;
+                for jj = 1:length(reps)
+                    channels = model.file.readPayloadData('Fluorescence', model.Fluorescence.repetitions{jj}, 'memberNames');
+                    for kk = 1:length(channels)
+                        flType = model.file.readPayloadData('Fluorescence', model.Fluorescence.repetitions{jj}, 'channel', channels{kk});
+                        if (strcmp(mask.parameter, [sprintf('Fl. rep. %01.0d, ', jj) flType]))
+                            fluorescence = model.file.readPayloadData('Fluorescence', model.Fluorescence.repetitions{jj}, 'data', channels{kk});
+                            fluorescence = medfilt1(fluorescence, 3);
+                            break;
+                        end
+                    end
+                    if exist('fluorescence', 'var')
+                        break
+                    end
+                end
+                
+                x = 4.8*(1:size(fluorescence, 1))/57;
+                x = x - nanmean(x(:));
+                y = 4.8*(1:size(fluorescence, 2))/57;
+                y = y - nanmean(y(:));
+                
+                FL = interp2(x, y, fluorescence, ...
+                    model.Brillouin.positions.x(1,:), model.Brillouin.positions.y(:,1));
+                
+                positions = model.Brillouin.positions;
+                FL(FL > mask.max | FL < mask.min) = NaN;
+                view.DensityMasking.plot = imagesc(ax, positions.x(1,:,1), positions.y(:,1,1), FL, 'AlphaData', ~isnan(FL));
+                flType = lower(flType);
+                switch (flType)
+                    case 'brightfield'
+                        colormap(ax, 'gray');
+                    case 'green'
+                        greenColor=zeros(64,3);
+                        greenColor(:,2)=linspace(0,1,64);
+                        colormap(ax, greenColor);
+                    case 'red'
+                        redColor=zeros(64,3);
+                        redColor(:,1)=linspace(0,1,64);
+                        colormap(ax, redColor);
+                    case 'blue'
+                        blueColor=zeros(64,3);
+                        blueColor(:,3)=linspace(0,1,64);
+                        colormap(ax, blueColor);
+                end
+                cb = colorbar(ax);
+                ylabel(cb, '$I$ [a.u.]', 'interpreter', 'latex');
+            catch
+                if ishandle(view.DensityMasking.plot)
+                    delete(view.DensityMasking.plot);
+                end
             end
     end
     axis(ax, 'equal');

@@ -61,7 +61,37 @@ function calculateDensity(model)
                         m(BS > mask.max | BS < mask.min) = 0;
                         m = imgaussfilt(m,0.5);
                     otherwise
-                        m = zeros(size(density.rho,1), size(density.rho,2));
+                        try
+                            reps = model.Fluorescence.repetitions;
+                            for ll = 1:length(reps)
+                                channels = model.file.readPayloadData('Fluorescence', model.Fluorescence.repetitions{ll}, 'memberNames');
+                                for kk = 1:length(channels)
+                                    flType = model.file.readPayloadData('Fluorescence', model.Fluorescence.repetitions{ll}, 'channel', channels{kk});
+                                    if (strcmp(mask.parameter, [sprintf('Fl. rep. %01.0d, ', ll) flType]))
+                                        fluorescence = model.file.readPayloadData('Fluorescence', model.Fluorescence.repetitions{ll}, 'data', channels{kk});
+                                        fluorescence = medfilt1(fluorescence, 3);
+                                        break;
+                                    end
+                                end
+                                if exist('fluorescence', 'var')
+                                    break
+                                end
+                            end
+
+                            x = 4.8*(1:size(fluorescence, 1))/57;
+                            x = x - nanmean(x(:));
+                            y = 4.8*(1:size(fluorescence, 2))/57;
+                            y = y - nanmean(y(:));
+
+                            FL = interp2(x, y, fluorescence, ...
+                                model.Brillouin.positions.x(1,:), model.Brillouin.positions.y(:,1));
+
+                            m = ones(size(FL));
+                            m(FL > mask.max | FL < mask.min) = 0;
+                            m = imgaussfilt(m,0.5);
+                        catch
+                            m = zeros(size(density.rho,1), size(density.rho,2));
+                        end
                 end
                 masks.(masksFields{jj}).m = m;
                 m_sum = m_sum + m;
