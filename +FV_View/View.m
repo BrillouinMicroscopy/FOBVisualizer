@@ -7,11 +7,13 @@ classdef View < handle
         ODT;
         Fluorescence;
         Brillouin;
+        Density;
         Modulus
         help;
         figure;
         menubar;
-        Alignment
+        Alignment;
+        DensityMasking;
     end
 
     methods

@@ -42,6 +42,10 @@ function closeGUI(~, ~, model, view, controllers)
         close(view.Alignment.parent);
         delete(view.Alignment.parent);
     end
+    if isfield(view.DensityMasking, 'parent') && ishandle(view.DensityMasking.parent)
+        close(view.DensityMasking.parent);
+        delete(view.DensityMasking.parent);
+    end
     controllers.data.closeFile();
     model.log.write('=====================================================');
     model.log.log('V/FOBVisualizer: Closed program.');
@@ -53,6 +57,7 @@ function controllers = controller(model, view)
     Brillouin = FV_Controller.Brillouin(model, view);
     fluorescence = FV_Controller.Fluorescence(model, view);
     ODT = FV_Controller.ODT(model, view);
+    density = FV_Controller.Density(model, view);
     modulus = FV_Controller.Modulus(model, view);
     help = FV_Controller.Help(model, view);
     controllers = struct( ...
@@ -60,6 +65,7 @@ function controllers = controller(model, view)
         'Brillouin', Brillouin, ...
         'fluorescence', fluorescence, ...
         'ODT', ODT, ...
+        'density', density, ...
         'modulus', modulus, ...
         'help', help ...
     );
