@@ -10,7 +10,11 @@ function callbacks = Data(model, view)
 
     callbacks = struct( ...
         'open', @(filePath)openFile(model, filePath), ...
+        'openFile', @(filePath)openFile(model, filePath), ...
+        'openAlignment', @()openAlignment('', '', view, model), ...
+        'save', @()selectSaveData('', '', model), ...
         'closeFile', @()closeFile('', '', model), ...
+        'setParameters', @(parameters)setParameters(model, parameters), ...
         'loadAlignmentData', @()loadAlignmentData(model) ...
     );
 end
@@ -83,6 +87,24 @@ function closeFile(~, ~, model)
         model.log.write('');
     end
     model.reset();
+end
+
+function setParameters(model, parameters)
+    f = fields(parameters);
+    for jj = 1:length(f)
+        model.(f{jj}) = copyFields(model.(f{jj}), parameters.(f{jj}));
+    end
+    
+    %% recursively copy parameters into model
+    function target = copyFields(target, source)
+        for fn = fieldnames(source).'
+            if isstruct(source.(fn{1}))
+                target.(fn{1}) = copyFields(target.(fn{1}), source.(fn{1}));
+            else
+                target.(fn{1}) = source.(fn{1});
+            end
+        end
+    end
 end
 
 function selectSaveData(~, ~, model)
@@ -164,5 +186,5 @@ function openAlignment(~, ~, view, model)
 
     view.Alignment = FV_View.Alignment(parent, model);
 
-    FV_Controller.Alignment(model, view);
+    model.controllers.Alignment = FV_Controller.Alignment(model, view);
 end

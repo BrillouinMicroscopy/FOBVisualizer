@@ -156,5 +156,5 @@ function openMasking(~, ~, view, model)
     model.tmp.selectedMask = 1;
     FV_View.DensityMasking(view, model);
 
-    FV_Controller.DensityMasking(model, view);
+    model.controllers.DensityMasking = FV_Controller.DensityMasking(model, view);
 end
