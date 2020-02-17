@@ -83,7 +83,9 @@ function start(~, ~, model, view)
                     [tempX, tempY] = ind2sub(size(BS_int), tempInd);
                     Reconimgtemp = ODT.data.Reconimg(min(tempX):max(tempX), min(tempY):max(tempY), :);   % select RI regions matching with BS FOV
                     BS_int = BS_int(min(tempX):max(tempX), min(tempY):max(tempY));                      % select interpolated BS maps matching with BS FOV
+                    
                     BS_int_zm = BS_int - mean2(BS_int);
+                    BS_int_zm = wiener2(BS_int_zm, [5 5]);
                     
                     [BS_int_zm_dx, BS_int_zm_dy] = gradient(BS_int_zm);
                     BS_int_zm_grad = sqrt(BS_int_zm_dx.^2 + BS_int_zm_dy.^2);
@@ -95,6 +97,9 @@ function start(~, ~, model, view)
                     zetts = 1:(size(ODT.data.Reconimg, 3) - round(BMZres/ODT.data.res4));
                     for z = zetts
                         testVol = mean(Reconimgtemp(:,:, (0:round(BMZres/ODT.data.res4)) + z), 3);                   % averaged RI map in the focal volume
+                        
+                        testVol = testVol - mean2(testVol);
+                        testVol = wiener2(testVol, [5 5]);
                         
                         [RI_dx, RI_dy] = gradient(testVol);
                         RI_grad = sqrt(RI_dx.^2 + RI_dy.^2);
