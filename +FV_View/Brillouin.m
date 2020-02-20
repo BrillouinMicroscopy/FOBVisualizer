@@ -85,8 +85,10 @@ function onFileChange(view, model)
                     d = squeeze(BS);
                     p = squeeze(positions.(Brillouin.nsdims{1}));
                     view.Brillouin.plot = plot(ax, p, d, 'marker', 'x');
-                    xlim([min(p(:)), max(p(:))]);
-                    ylim([min(d(:)), max(d(:))]);
+                    xlim(ax, [min(p(:)), max(p(:))]);
+                    ylim(ax, [min(d(:)), max(d(:))]);
+                    xlabel(ax, ['$' Brillouin.nsdims{1} '$ [$\mu$m]'], 'interpreter', 'latex');
+                    ylabel(ax, '$\nu_\mathrm{B}$ [GHz]', 'interpreter', 'latex');
                 case 2
                     %% two dimensional case
                     d = squeeze(BS);
@@ -96,11 +98,11 @@ function onFileChange(view, model)
                     
                     view.Brillouin.plot = imagesc(ax, pos.(Brillouin.nsdims{2})(1,:), pos.(Brillouin.nsdims{1})(:,1), d);
                     axis(ax, 'equal');
-                    xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
-                    ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
+                    xlabel(ax, ['$' Brillouin.nsdims{2} '$ [$\mu$m]'], 'interpreter', 'latex');
+                    ylabel(ax, ['$' Brillouin.nsdims{1} '$ [$\mu$m]'], 'interpreter', 'latex');
         %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
                     cb = colorbar(ax);
-                    ylabel(cb, '$\nu$ [GHz]', 'interpreter', 'latex');
+                    ylabel(cb, '$\nu_\mathrm{B}$ [GHz]', 'interpreter', 'latex');
                     set(ax, 'yDir', 'normal');
                 case 3
             end

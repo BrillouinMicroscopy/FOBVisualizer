@@ -59,8 +59,10 @@ function onFileChange(view, model)
                     d = 1e-9*squeeze(M);
                     p = squeeze(positions.(Brillouin.nsdims{1}));
                     view.Modulus.plot = plot(ax, p, d, 'marker', 'x');
-                    xlim([min(p(:)), max(p(:))]);
-                    ylim([min(d(:)), max(d(:))]);
+                    xlim(ax, [min(p(:)), max(p(:))]);
+                    ylim(ax, [min(d(:)), max(d(:))]);
+                    xlabel(ax, ['$' Brillouin.nsdims{1} '$ [$\mu$m]'], 'interpreter', 'latex');
+                    ylabel(ax, '$M''$ [GPa]', 'interpreter', 'latex');
                 case 2
                     %% two dimensional case
                     M = nanmean(model.modulus.M, 4);
@@ -71,8 +73,8 @@ function onFileChange(view, model)
                     
                     view.Modulus.plot = imagesc(ax, pos.(Brillouin.nsdims{2})(1,:), pos.(Brillouin.nsdims{1})(:,1), d);
                     axis(ax, 'equal');
-                    xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
-                    ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
+                    xlabel(ax, ['$' Brillouin.nsdims{2} '$ [$\mu$m]'], 'interpreter', 'latex');
+                    ylabel(ax, ['$' Brillouin.nsdims{1} '$ [$\mu$m]'], 'interpreter', 'latex');
         %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
                     cb = colorbar(ax);
                     ylabel(cb, '$M''$ [GPa]', 'interpreter', 'latex');
@@ -95,6 +97,9 @@ function onFileChange(view, model)
 end
 
 function onFOVChange(view, model)
+    if model.Brillouin.dimension ~= 2
+        return
+    end
     ax = view.Modulus.axesImage;
     if model.parameters.xlim(1) < model.parameters.xlim(2)
         xlim(ax, [model.parameters.xlim]);
