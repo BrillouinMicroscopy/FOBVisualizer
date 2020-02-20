@@ -25,28 +25,8 @@ function start(~, ~, model, view)
         try
             BS = nanmean(Brillouin.shift, 4);
             positions = Brillouin.positions;
-
-            dimensions = size(BS);
-            dimension = sum(dimensions > 1);
-
-            %% find non-singular dimensions
-            dims = {'y', 'x', 'z'};
-            nsdims = cell(dimension,1);
-            sdims = cell(dimension,1);
-            ind = 0;
-            sind = 0;
-            for jj = 1:length(dimensions)
-                if dimensions(jj) > 1
-                    ind = ind + 1;
-                    nsdims{ind} = dims{jj};
-                else
-                    sind = sind + 1;
-                    sdims{sind} = dims{jj};
-                end
-            end
-            Brillouin.nsdims = nsdims;
             
-            switch (dimension)
+            switch (Brillouin.dimension)
                 case 0
                 case 1
                     %% one dimensional case
@@ -84,6 +64,9 @@ function start(~, ~, model, view)
                     Reconimgtemp = ODT.data.Reconimg(min(tempX):max(tempX), min(tempY):max(tempY), :);   % select RI regions matching with BS FOV
                     BS_int = BS_int(min(tempX):max(tempX), min(tempY):max(tempY));                      % select interpolated BS maps matching with BS FOV
                     
+                    X_valid = X(min(tempX):max(tempX), min(tempY):max(tempY));
+                    Y_valid = Y(min(tempX):max(tempX), min(tempY):max(tempY));
+                    
                     BS_int_zm = BS_int - mean2(BS_int);
                     BS_int_zm = wiener2(BS_int_zm, [5 5]);
                     
@@ -95,6 +78,25 @@ function start(~, ~, model, view)
                     corrMaxInd = NaN(size(ODT.data.Reconimg, 3) - round(BMZres/ODT.data.res4), 1);
                     
                     zetts = 1:(size(ODT.data.Reconimg, 3) - round(BMZres/ODT.data.res4));
+                    
+                    % Set up the plot
+                    view.Alignment.ODT_plot = imagesc(view.Alignment.ODT, X_valid(1,:), Y_valid(:,1), NaN);
+                    axis(view.Alignment.ODT, 'equal');
+                    xlim(view.Alignment.ODT, [min(X_valid, [], 'all'), max(X_valid, [], 'all')]);
+                    ylim(view.Alignment.ODT, [min(Y_valid, [], 'all'), max(Y_valid, [], 'all')]);
+                    set(view.Alignment.ODT, 'YDir', 'normal');
+                    colormap(view.Alignment.ODT, 'jet');
+                    xlabel(view.Alignment.ODT, ['$' Brillouin.nsdims{2} '$ [$\mu$m]'], 'interpreter', 'latex');
+                    ylabel(view.Alignment.ODT, ['$' Brillouin.nsdims{1} '$ [$\mu$m]'], 'interpreter', 'latex');
+                    cb = colorbar(view.Alignment.ODT);
+                    ylabel(cb, '$\Delta n$', 'interpreter', 'latex');
+                    
+                    view.Alignment.coeff_plot = plot(view.Alignment.coeff, zetts, corrMaxVal, 'or');
+                    xlabel(view.Alignment.coeff, '$z$ [$\mu$m]', 'interpreter', 'latex');
+                    xlim(view.Alignment.coeff, [1 max(zetts)]);
+                    
+                    set(view.Alignment.map, 'YDir', 'normal');
+                    
                     for z = zetts
                         testVol = mean(Reconimgtemp(:,:, (0:round(BMZres/ODT.data.res4)) + z), 3);                   % averaged RI map in the focal volume
                         
@@ -107,14 +109,10 @@ function start(~, ~, model, view)
                         corrVal = xcorr2(RI_grad, BS_int_zm_grad); % calculate the cross-correlation
                         [corrMaxVal(z), corrMaxInd(z)] = max(corrVal(:));
                         
-                        view.Alignment.ODT_plot = imagesc(view.Alignment.ODT, testVol);
+                        % Update plots
+                        set(view.Alignment.ODT_plot, 'CData', testVol);
+                        set(view.Alignment.coeff_plot, 'YData', corrMaxVal);
                         view.Alignment.map_plot = imagesc(view.Alignment.map, corrVal);
-                        view.Alignment.coeff_plot = plot(view.Alignment.coeff, zetts, corrMaxVal, 'or');
-                        
-                        set(view.Alignment.map, 'YDir', 'normal');
-                        set(view.Alignment.ODT, 'YDir', 'normal');
-                        xlim(view.Alignment.coeff, [1 max(zetts)]);
-                        colormap(view.Alignment.ODT, 'jet');
                         
                         drawnow;
                     end

@@ -72,6 +72,7 @@ end
 
 function initView(view, model)
     Brillouin = model.Brillouin;
+    Alignment = model.Alignment;
     
     set(view.dx, 'String', model.Alignment.dx);
     set(view.dy, 'String', model.Alignment.dy);
@@ -80,50 +81,32 @@ function initView(view, model)
     if ~isempty(Brillouin.repetitions)
         try
             ax = view.BS;
+            
             BS = nanmean(Brillouin.shift, 4);
             positions = Brillouin.positions;
-
-            dimensions = size(BS);
-            dimension = sum(dimensions > 1);
-
-            %% find non-singular dimensions
-            dims = {'y', 'x', 'z'};
-            nsdims = cell(dimension,1);
-            sdims = cell(dimension,1);
-            ind = 0;
-            sind = 0;
-            for jj = 1:length(dimensions)
-                if dimensions(jj) > 1
-                    ind = ind + 1;
-                    nsdims{ind} = dims{jj};
-                else
-                    sind = sind + 1;
-                    sdims{sind} = dims{jj};
-                end
-            end
-            Brillouin.nsdims = nsdims;
 
             if ishandle(view.BS_plot)
                 delete(view.BS_plot)
             end
-            switch (dimension)
+            switch (Brillouin.dimension)
                 case 0
                 case 1
                     %% one dimensional case
                 case 2
                     %% two dimensional case
                     d = squeeze(BS);
-                    pos.x = squeeze(positions.x);
-                    pos.y = squeeze(positions.y);
-                    pos.z = squeeze(positions.z);
+                    pos.x = squeeze(positions.x) + Alignment.dx;
+                    pos.y = squeeze(positions.y) + Alignment.dy;
+                    pos.z = squeeze(positions.z) + Alignment.dz;
 
-                    view.BS_plot = imagesc(ax, pos.(nsdims{2})(1,:), pos.(nsdims{1})(:,1), d);
+                    view.BS_plot = imagesc(ax, pos.(Brillouin.nsdims{2})(1,:), pos.(Brillouin.nsdims{1})(:,1), d);
                     axis(ax, 'equal');
-                    xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
-                    ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
-        %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
+                    xlabel(ax, ['$' Brillouin.nsdims{2} '$ [$\mu$m]'], 'interpreter', 'latex');
+                    ylabel(ax, ['$' Brillouin.nsdims{1} '$ [$\mu$m]'], 'interpreter', 'latex');
+                    xlim(ax, [min(pos.x, [], 'all'), max(pos.x, [], 'all')]);
+                    ylim(ax, [min(pos.y, [], 'all'), max(pos.y, [], 'all')]);
                     cb = colorbar(ax);
-                    ylabel(cb, '$\nu$ [GHz]', 'interpreter', 'latex');
+                    ylabel(cb, '$\nu_\mathrm{B}$ [GHz]', 'interpreter', 'latex');
                     set(ax, 'yDir', 'normal');
                 case 3
             end
