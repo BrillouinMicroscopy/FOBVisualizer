@@ -1,6 +1,8 @@
 function callbacks = Alignment(model, view)
 %% ALIGNMENT Controller
 %     
+    set(view.Alignment.findz0, 'Callback', {@findz0, model, view});
+    
     set(view.Alignment.start, 'Callback', {@start, model, view});
     
     set(view.Alignment.save, 'Callback', {@save, model, view});
@@ -9,10 +11,29 @@ function callbacks = Alignment(model, view)
     %% general panel
 
     callbacks = struct( ...
+        'findz0', @()findz0('', '', model, view), ...
         'start', @()start('', '', model, view), ...
         'save', @()save('', '', model, view), ...
         'close', @()closeAlignment('', '', view) ...
     );
+end
+
+function findz0(~, ~, model, view)
+    ODT = model.ODT;
+    Reconimg = ODT.data.Reconimg;
+    RI_projection = squeeze(max(max(Reconimg, [], 1), [], 2));
+    RI_projection = RI_projection - mean2(RI_projection);
+    RI_projection_mean = movmean(RI_projection, 10);
+    RI_projection_mean_dif1 = diff(RI_projection_mean);
+    RI_projection_mean_dif2 = diff(RI_projection_mean_dif1);
+    
+    
+    figure;
+    hold on;
+    plot(RI_projection);
+    plot(RI_projection_mean, 'color', 'red');
+    plot(RI_projection_mean_dif1, 'color', 'blue');
+    plot(RI_projection_mean_dif2, 'color', 'green');
 end
 
 function start(~, ~, model, view)

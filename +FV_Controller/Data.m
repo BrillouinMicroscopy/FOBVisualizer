@@ -156,6 +156,9 @@ function loadAlignmentData(model)
         modulus = model.defaultModulus;
         density = model.defaultDensity;
     end
+    if ~isfield(Alignment, 'z0')
+        Alignment.z0 = model.defaultAlignment.z0;
+    end
     if ~isfield(density, 'rho_dry')
         density.rho_dry = model.defaultDensity.rho_dry;
     end
@@ -191,7 +194,7 @@ function openAlignment(~, ~, view, model)
     else
         % open it centered over main figure
         pos = view.figure.Position;
-        parent = figure('Position', [pos(1) + pos(3)/2 - 450, pos(2) + pos(4)/2 - 325, 900, 650]);
+        parent = figure('Position', [pos(1) + pos(3)/2 - 500, pos(2) + pos(4)/2 - 325, 1000, 650]);
         % hide the menubar and prevent resizing
         set(parent, 'menubar', 'none', 'Resize','off', 'units', 'pixels');
     end
