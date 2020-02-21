@@ -35,13 +35,17 @@ function calculateDensity(model)
             y = Alignment.dy + positions.y;
             z = Alignment.dz + positions.z;
             
+            intZ = NaN(size(z,3)*numel(dz), 1);
+            for jj = 1:size(z,3)
+                intZ((1:numel(dz)) + (jj-1)*numel(dz)) = z(1,1,jj) + dz;
+            end
+            [X, Y, Z] = meshgrid(x(1,:,1), y(:,1,1), intZ);
+            RI_tmp = interp3(ODT.positions.x, ODT.positions.y, ODT.positions.z, ODT.data.Reconimg, ...
+                X, Y, Z);
+            
             RI = NaN(size(z));
-            for jj = 1:size(z, 3)
-                [X, Y, Z] = meshgrid(x(1,:,1), y(:,1,1), z(1,1,jj) + dz);
-                
-                RI_tmp = interp3(ODT.positions.x, ODT.positions.y, ODT.positions.z, ODT.data.Reconimg, ...
-                    X, Y, Z);
-                RI(:, :, jj) = nanmean(RI_tmp, 3);
+            for jj = 1:size(z,3)
+                RI(:,:,jj) = nanmean(RI_tmp(:,:,(1:numel(dz)) + (jj-1)*numel(dz)), 3);
             end
 
             %% Calculate density
