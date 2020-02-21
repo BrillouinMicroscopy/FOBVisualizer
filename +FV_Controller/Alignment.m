@@ -38,14 +38,8 @@ function start(~, ~, model, view)
                     pos.z = squeeze(positions.z);
                     
                     %% ODT positions
-                    ZP4 = round(size(ODT.data.Reconimg,1));
-                    x = ((1:ZP4)-ZP4/2)*ODT.data.res3;
-                    y = x;
-
-%                     ZP5 = round(size(ODT.data.Reconimg,3));
-%                     z = ((1:ZP5)-ZP5/2)*ODT.data.res4;
-
-                    [X, Y] = meshgrid(x, y);
+                    X = ODT.positions.x(:,:,1);
+                    Y = ODT.positions.y(:,:,1);
                     
                     %% Interpolate NaNs in case there are some
                     if sum(isnan(BS(:))) > 0
@@ -97,8 +91,8 @@ function start(~, ~, model, view)
                     
                     set(view.Alignment.map, 'YDir', 'normal');
                     
-                    for z = zetts
-                        testVol = mean(Reconimgtemp(:,:, (0:round(BMZres/ODT.data.res4)) + z), 3);                   % averaged RI map in the focal volume
+                    for indZ = zetts
+                        testVol = mean(Reconimgtemp(:,:, (0:round(BMZres/ODT.data.res4)) + indZ), 3);                   % averaged RI map in the focal volume
                         
                         testVol = testVol - mean2(testVol);
                         testVol = wiener2(testVol, [5 5]);
@@ -107,7 +101,7 @@ function start(~, ~, model, view)
                         RI_grad = sqrt(RI_dx.^2 + RI_dy.^2);
                         
                         corrVal = xcorr2(RI_grad, BS_int_zm_grad); % calculate the cross-correlation
-                        [corrMaxVal(z), corrMaxInd(z)] = max(corrVal(:));
+                        [corrMaxVal(indZ), corrMaxInd(indZ)] = max(corrVal(:));
                         
                         % Update plots
                         set(view.Alignment.ODT_plot, 'CData', testVol);
@@ -145,7 +139,7 @@ function start(~, ~, model, view)
                         (Y_int(2,1) - Y_int(1,1));
                     dy = -1 * (indX - (size(BS_int_grad, 1) + size(RI_int_grad, 1)) / 2) * ...
                         (X_int(1,2) - X_int(1,1));
-                    dz = (indZ - size(zetts, 2)/2) * ODT.data.res4 - pos.z(1,1,1);
+                    dz = (size(zetts, 2)/2 - indZ) * ODT.data.res4 - pos.z(1,1,1);
                     set(view.Alignment.dx, 'String', dx);
                     set(view.Alignment.dy, 'String', dy);
                     set(view.Alignment.dz, 'String', dz);

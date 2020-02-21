@@ -38,12 +38,12 @@ function loadRepetition(model, view, repetition)
 
             ODT.date = model.file.readPayloadData('ODT', ODT.repetition.name, 'date', 0);
             
-            ZP4=round(size(ODT.data.Reconimg,1));
+            ZP4 = round(size(ODT.data.Reconimg,1));
             x = ((1:ZP4)-ZP4/2)*ODT.data.res3;
             y = x;
             
-            ZP5=round(size(ODT.data.Reconimg,3));
-            z = ((1:ZP5)-ZP5/2)*ODT.data.res4;
+            ZP5 = round(size(ODT.data.Reconimg,3));
+            z = fliplr(((1:ZP5)-ZP5/2)*ODT.data.res4);
             
             [X, Y, Z] = meshgrid(x, y, z);
             
