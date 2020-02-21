@@ -28,8 +28,21 @@ function calculateDensity(model)
             positions = Brillouin.positions;
 
             %% Calculate the absolute density from the measured RI
-            RI = interp3(ODT.positions.x, ODT.positions.y, ODT.positions.z, ODT.data.Reconimg, ...
-                Alignment.dx + positions.x, Alignment.dy + positions.y, Alignment.dz + positions.z);
+            BMZres = 2;
+            dz = linspace(-BMZres/2, BMZres/2, 1 + round(BMZres/ODT.data.res4));
+            dz = dz - mean2(dz);
+            x = Alignment.dx + positions.x;
+            y = Alignment.dy + positions.y;
+            z = Alignment.dz + positions.z;
+            
+            RI = NaN(size(z));
+            for jj = 1:size(z, 3)
+                [X, Y, Z] = meshgrid(x(1,:,1), y(:,1,1), z(1,1,jj) + dz);
+                
+                RI_tmp = interp3(ODT.positions.x, ODT.positions.y, ODT.positions.z, ODT.data.Reconimg, ...
+                    X, Y, Z);
+                RI(:, :, jj) = nanmean(RI_tmp, 3);
+            end
 
             %% Calculate density
             % If requested, we use the absolute density of the dry fraction
