@@ -19,21 +19,43 @@ function callbacks = Alignment(model, view)
 end
 
 function findz0(~, ~, model, view)
-    ODT = model.ODT;
-    Reconimg = ODT.data.Reconimg;
-    RI_projection = squeeze(max(max(Reconimg, [], 1), [], 2));
-    RI_projection = RI_projection - mean2(RI_projection);
-    RI_projection_mean = movmean(RI_projection, 10);
-    RI_projection_mean_dif1 = diff(RI_projection_mean);
-    RI_projection_mean_dif2 = diff(RI_projection_mean_dif1);
+    %% Average refractive index along x- and y-direction, remove constant component
+    RI_proj = flipud(double(squeeze(mean(mean(model.ODT.data.Reconimg, 1), 2))));
+    RI_proj = RI_proj - median(RI_proj, 'all');
+    z = flipud(squeeze(model.ODT.positions.z(1,1,:)));
     
+    %% Interpolate refractive index
+    z_int = linspace(min(z), max(z), 10*numel(z));
+    RI_proj_int = interp1(z, RI_proj, z_int, 'spline');
     
-    figure;
+    %%
+    RI_proj_int_mean = movmean(RI_proj_int, 50);
+    RI_proj_int_mean_d1 = diff(RI_proj_int_mean);
+    RI_proj_int_mean_d2 = diff(movmean(RI_proj_int_mean_d1, 50));
+    
+    RI_proj_int_mean_d2_valid = RI_proj_int_mean_d2;
+    RI_proj_int_mean_d2_valid(RI_proj_int_mean_d1(1:end-1) < 0) = NaN;
+    
+    [~, indZ] = nanmax(RI_proj_int_mean_d2_valid);
+    
+    z0 = z_int(indZ);
+    model.Alignment.z0 = z0;
+    
+    set(view.Alignment.z0, 'String', z0);
+    
+    %%
+    figure(3);
+    hold off;
+    plot(z, RI_proj, 'linestyle', 'none', 'marker', 'x');
     hold on;
-    plot(RI_projection);
-    plot(RI_projection_mean, 'color', 'red');
-    plot(RI_projection_mean_dif1, 'color', 'blue');
-    plot(RI_projection_mean_dif2, 'color', 'green');
+    plot(z_int, RI_proj_int_mean);
+    plot(z_int(1:end-1), 100*RI_proj_int_mean_d1);
+    plot(z_int(1:end-2), 1000*RI_proj_int_mean_d2);
+    plot([z0, z0], get(gca, 'ylim'));
+    xlim([min(z_int), max(z_int)]);
+    xlabel('$z$ [$\mu$m]', 'interpreter', 'latex');
+    ylabel('$n$ [a.u.]', 'interpreter', 'latex');
+    legend('Measured', 'Interpolated and smoothed', '1st derivative', '2nd derivative', 'Detected interface');
 end
 
 function start(~, ~, model, view)
@@ -51,6 +73,24 @@ function start(~, ~, model, view)
                 case 0
                 case 1
                     %% one dimensional case
+                    BS = squeeze(BS);
+                    BS_int = nanmean(Brillouin.intensity, 4);
+                    BS_int = squeeze(BS_int);
+                    BS_fwhm = nanmean(Brillouin.fwhm, 4);
+                    BS_fwhm = squeeze(BS_fwhm);
+                    pos.x = squeeze(positions.x);
+                    pos.y = squeeze(positions.y);
+                    pos.z = squeeze(positions.z);
+                    
+                    figure;
+%                     plot(BS);
+                    hold on;
+                    plot(pos.z,BS_int);
+                    ylim([0 100]);
+%                     
+%                     figure;
+%                     plot(pos.z,BS_fwhm);
+                    
                 case 2
                     %% two dimensional case
                     BS = squeeze(BS);
@@ -177,20 +217,26 @@ function save(~, ~, model, view)
     %% save data here
     Alignment = model.Alignment;
     changed = false;
-    dx = str2double(get(view.Alignment.dx, 'String'));
-    if Alignment.dx ~= dx
-        Alignment.dx = dx;
-        changed = true;
+    if isfield(view.Alignment, 'dx')
+        dx = str2double(get(view.Alignment.dx, 'String'));
+        if Alignment.dx ~= dx
+            Alignment.dx = dx;
+            changed = true;
+        end
     end
-    dy = str2double(get(view.Alignment.dy, 'String'));
-    if Alignment.dy ~= dy
-        Alignment.dy = dy;
-        changed = true;
+    if isfield(view.Alignment, 'dy')
+        dy = str2double(get(view.Alignment.dy, 'String'));
+        if Alignment.dy ~= dy
+            Alignment.dy = dy;
+            changed = true;
+        end
     end
-    dz = str2double(get(view.Alignment.dz, 'String'));
-    if Alignment.dz ~= dz
-        Alignment.dz = dz;
-        changed = true;
+    if isfield(view.Alignment, 'dz')
+        dz = str2double(get(view.Alignment.dz, 'String'));
+        if Alignment.dz ~= dz
+            Alignment.dz = dz;
+            changed = true;
+        end
     end
     if changed
         model.Alignment = Alignment;

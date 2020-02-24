@@ -36,9 +36,11 @@ function handles = initGUI(parent, model)
         case 1
 
             uicontrol('Parent', parent, 'Style', 'text', 'String', 'dz [µm]:', 'Units', 'normalized',...
-                'Position', [0.645,0.015,0.07,0.05], 'FontSize', 11, 'HorizontalAlignment', 'left');
+                'Position', [0.505,0.015,0.07,0.05], 'FontSize', 11, 'HorizontalAlignment', 'left');
             dz = uicontrol('Parent', parent, 'Style', 'edit', 'Units', 'normalized',...
-                'Position', [0.705,0.03,0.07,0.05], 'FontSize', 11, 'HorizontalAlignment', 'center');
+                'Position', [0.565,0.03,0.07,0.05], 'FontSize', 11, 'HorizontalAlignment', 'center');
+            
+            set(start, 'Position', [0.415,0.03,0.08,0.05]);
             
             handles = struct(...
                 'parent', parent, ...
@@ -110,6 +112,7 @@ function initView(view, model)
     switch (model.Brillouin.dimension)
         case 0
         case 1
+            set(view.dz, 'String', model.Alignment.dz);
         case 2
             set(view.dx, 'String', model.Alignment.dx);
             set(view.dy, 'String', model.Alignment.dy);
