@@ -43,19 +43,31 @@ function findz0(~, ~, model, view)
     
     set(view.Alignment.z0, 'String', z0);
     
-    %%
-    figure(3);
-    hold off;
-    plot(z, RI_proj, 'linestyle', 'none', 'marker', 'x');
-    hold on;
-    plot(z_int, RI_proj_int_mean);
-    plot(z_int(1:end-1), 100*RI_proj_int_mean_d1);
-    plot(z_int(1:end-2), 1000*RI_proj_int_mean_d2);
-    plot([z0, z0], get(gca, 'ylim'));
-    xlim([min(z_int), max(z_int)]);
-    xlabel('$z$ [$\mu$m]', 'interpreter', 'latex');
-    ylabel('$n$ [a.u.]', 'interpreter', 'latex');
-    legend('Measured', 'Interpolated and smoothed', '1st derivative', '2nd derivative', 'Detected interface');
+    %% Plot results
+    ax = view.Alignment.ODT;
+    hold(ax, 'off');
+    view.Alignment.ODT_plot = plot(ax, z, RI_proj, 'linestyle', 'none', 'marker', 'x');
+    hold(ax, 'on');
+    plot(ax, z_int, RI_proj_int_mean);
+    plot(ax, z_int(1:end-1), 100*RI_proj_int_mean_d1);
+    plot(ax, z_int(1:end-2), 1000*RI_proj_int_mean_d2);
+    % Find min and max values of all arrays
+    y_min1 = min(RI_proj_int_mean, [], 'all');
+    y_max1 = max(RI_proj_int_mean, [], 'all');
+    y_min2 = min(100*RI_proj_int_mean_d1, [], 'all');
+    y_max2 = max(100*RI_proj_int_mean_d1, [], 'all');
+    y_min3 = min(1000*RI_proj_int_mean_d2, [], 'all');
+    y_max3 = max(1000*RI_proj_int_mean_d2, [], 'all');
+    y_min = min([y_min1 y_min2 y_min3]);
+    y_max = max([y_max1 y_max2 y_max3]);
+    dy = y_max - y_min;
+    y_lim = [y_min y_max] + [-0.05 0.05] * dy;
+    ylim(ax, y_lim);
+    plot(ax, [z0, z0], y_lim, 'Linewidth', 1.5);
+    xlim(ax, [min(z_int), max(z_int)]);
+    xlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
+    ylabel(ax, '$\Delta n$ [a.u.]', 'interpreter', 'latex');
+    legend(ax, 'Measured', 'Interpolated and smoothed', '1st derivative', '2nd derivative', 'Detected interface');
 end
 
 function start(~, ~, model, view)
@@ -66,7 +78,11 @@ function start(~, ~, model, view)
     
     if ~isempty(Brillouin.repetitions) && ~isempty(ODT.repetitions)
         try
-            BS = nanmean(Brillouin.shift, 4);
+            BS = Brillouin.shift;
+            BS(~Brillouin.validity) = NaN;
+            BS(Brillouin.validityLevel > 25) = NaN;
+            
+            BS = nanmean(BS, 4);
             positions = Brillouin.positions;
             
             switch (Brillouin.dimension)
@@ -74,22 +90,55 @@ function start(~, ~, model, view)
                 case 1
                     %% one dimensional case
                     BS = squeeze(BS);
-                    BS_int = nanmean(Brillouin.intensity, 4);
+                    
+                    BS_int = Brillouin.intensity;
+                    BS_int(~Brillouin.validity) = NaN;
+                    BS_int(Brillouin.validityLevel > 25) = NaN;
+                    BS_int = nanmean(BS_int, 4);
                     BS_int = squeeze(BS_int);
-                    BS_fwhm = nanmean(Brillouin.fwhm, 4);
-                    BS_fwhm = squeeze(BS_fwhm);
+                    
                     pos.x = squeeze(positions.x);
                     pos.y = squeeze(positions.y);
                     pos.z = squeeze(positions.z);
                     
-                    figure;
-%                     plot(BS);
-                    hold on;
-                    plot(pos.z,BS_int);
-                    ylim([0 100]);
-%                     
-%                     figure;
-%                     plot(pos.z,BS_fwhm);
+                    BS(BS_int < 15) = NaN;
+                    
+                    %% Fit function to Brillouin peak intensity
+                    a = -1 * max(BS_int, [], 'all');
+                    b = -0.5;
+                    c = 0;
+                    d = max(BS_int, [], 'all');
+                    ft = fittype('a/(1+exp(-b*(x-c)))+d', 'independent', 'x', 'dependent', 'y');
+                    opts = fitoptions('Method', 'NonlinearLeastSquares');
+                    opts.Display = 'Off';
+                    opts.StartPoint = [a b c d];
+                    [fitresult, ~] = fit(pos.z(~isnan(BS_int)), BS_int(~isnan(BS_int)), ft, opts);
+                    fitted_curve = fitresult.a ./ (1 + exp(-fitresult.b * (pos.z - fitresult.c) )) + fitresult.d;
+                    
+                    %% Save alignment
+                    dz = model.Alignment.z0 - fitresult.c;
+                    set(view.Alignment.dz, 'String', dz);
+                    
+                    %% Plot results
+                    z = pos.z + dz;
+                    y_max = 1.1 * max(BS_int, [], 'all');
+                    ax = view.Alignment.BS;
+                    hold(ax, 'off');
+                    yyaxis(ax, 'left');
+                    plot(ax, z, BS_int, 'marker', 'x', 'linestyle', ':', 'color', [0, 0.4470, 0.7410]);
+                    hold(ax, 'on');
+                    plot(ax, z, fitted_curve, 'linestyle', '-', 'color', [0.8500, 0.3250, 0.0980]);
+                    plot(ax, [fitresult.c, fitresult.c] + dz, [0 y_max], 'Linewidth', 1.5, 'linestyle', '-', 'color', [0.4660, 0.6740, 0.1880]);
+                    ylim(ax, [0 y_max]);
+                    xlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
+                    ylabel(ax, '$I$ [a.u.]', 'interpreter', 'latex');
+                    yyaxis(ax, 'right');
+                    hold(ax, 'off');
+                    plot(ax, z, BS, 'linestyle', '--', 'color', [0.9290, 0.6940, 0.1250]);
+                    hold(ax, 'on');
+                    ylabel(ax, '$\nu_\mathrm{B}$ [GHz]', 'interpreter', 'latex');
+                    
+                    legend(ax, 'Measured intensity', 'Fitted curve', 'Detected interface', 'Measured Brillouin shift');
                     
                 case 2
                     %% two dimensional case

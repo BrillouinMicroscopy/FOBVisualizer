@@ -83,7 +83,7 @@ function onFileChange(view, model)
                 case 1
                     %% one dimensional case
                     d = squeeze(BS);
-                    p = squeeze(positions.(Brillouin.nsdims{1}));
+                    p = squeeze(positions.(Brillouin.nsdims{1})) + Alignment.(['d' Brillouin.nsdims{1}]);
                     view.Brillouin.plot = plot(ax, p, d, 'marker', 'x');
                     xlim(ax, [min(p(:)), max(p(:))]);
                     ylim(ax, [min(d(:)), max(d(:))]);

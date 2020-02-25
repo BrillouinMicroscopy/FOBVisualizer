@@ -110,7 +110,7 @@ function onFileChange(view, model)
                     %% one dimensional case
                     rho = nanmean(model.density.rho, 4);
                     d = 1e-3*squeeze(rho);
-                    p = squeeze(positions.(Brillouin.nsdims{1}));
+                    p = squeeze(positions.(Brillouin.nsdims{1})) + Alignment.(['d' Brillouin.nsdims{1}]);
                     view.Density.plot = plot(ax, p, d, 'marker', 'x');
                     xlim(ax, [min(p(:)), max(p(:))]);
                     ylim(ax, [min(d(:)), max(d(:))]);

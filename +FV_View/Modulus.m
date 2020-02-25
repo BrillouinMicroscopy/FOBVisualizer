@@ -57,7 +57,7 @@ function onFileChange(view, model)
                     %% one dimensional case
                     M = nanmean(model.modulus.M, 4);
                     d = 1e-9*squeeze(M);
-                    p = squeeze(positions.(Brillouin.nsdims{1}));
+                    p = squeeze(positions.(Brillouin.nsdims{1})) + Alignment.(['d' Brillouin.nsdims{1}]);
                     view.Modulus.plot = plot(ax, p, d, 'marker', 'x');
                     xlim(ax, [min(p(:)), max(p(:))]);
                     ylim(ax, [min(d(:)), max(d(:))]);
