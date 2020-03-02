@@ -2,14 +2,14 @@ function callbacks = Density(model, view)
 %% DATA Controller
     
     %% general panel
-    set(view.Density.n0, 'Callback', {@setValue, model, 'n0'});
-    set(view.Density.alpha, 'Callback', {@setValue, model, 'alpha'});
-    set(view.Density.rho0, 'Callback', {@setValue, model, 'rho0'});
+    set(view.Density.n0, 'ValueChangedFcn', {@setValue, model, 'n0'});
+    set(view.Density.alpha, 'ValueChangedFcn', {@setValue, model, 'alpha'});
+    set(view.Density.rho0, 'ValueChangedFcn', {@setValue, model, 'rho0'});
     
-    set(view.Density.useDryDensity, 'Callback', {@toggleUseDryDensity, model, view});
-    set(view.Density.rho_dry, 'Callback', {@setValue, model, 'rho_dry'});
+    set(view.Density.useDryDensity, 'ValueChangedFcn', {@toggleUseDryDensity, model, view});
+    set(view.Density.rho_dry, 'ValueChangedFcn', {@setValue, model, 'rho_dry'});
     
-    set(view.Density.openMasking, 'Callback', {@openMasking, view, model});
+    set(view.Density.openMasking, 'ButtonPushedFcn', {@openMasking, view, model});
 
     callbacks = struct( ...
         'calculateDensity', @()calculateDensity(model) ...

@@ -20,21 +20,21 @@ end
 function initGUI(~, view)
     parent = view.Brillouin.parent;
     
-    uicontrol('Parent', parent, 'Style','text','String','Brillouin repetition:', 'Units', 'normalized',...
-               'Position',[0.67,0.885,0.15,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    repetition = uicontrol('Parent', parent, 'Style','popup', 'Units', 'normalized',...
-               'Position',[0.80,0.91,0.05,0.005], 'FontSize', 11, 'HorizontalAlignment', 'left', 'String', {''});
-    uicontrol('Parent', parent, 'Style','text','String','of', 'Units', 'normalized',...
-               'Position',[0.86,0.885,0.02,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    repetitionCount = uicontrol('Parent', parent, 'Style','text','String','0', 'Units', 'normalized',...
-               'Position',[0.88,0.885,0.02,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    uilabel(parent, 'Text', 'Brillouin repetition:', 'Position', [930 710 100 20], ...
+        'HorizontalAlignment', 'left');
+    repetition = uidropdown(parent, 'Position', [1060 710 100 20], ...
+        'Items', {''});
+    uilabel(parent, 'Text', 'of', 'Position', [1180 710 30 20], ...
+        'HorizontalAlignment', 'left');
+    repetitionCount = uilabel(parent, 'Text', '0', 'Position', [1210 710 30 20], ...
+        'HorizontalAlignment', 'left');
     
-    uicontrol('Parent', parent, 'Style','text','String','Date:', 'Units', 'normalized',...
-               'Position',[0.67,0.85,0.15,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    date = uicontrol('Parent', parent, 'Style','text','String','', 'Units', 'normalized',...
-               'Position',[0.80,0.85,0.19,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    uilabel(parent, 'Text', 'Date:', 'Position', [930 690 100 20], ...
+        'HorizontalAlignment', 'left');
+    date = uilabel(parent, 'Text', '', 'Position', [1060 690 300 20], ...
+        'HorizontalAlignment', 'left');
     
-    axesImage = axes('Parent', parent, 'Position', [0.69 .46 .26 .34]);
+    axesImage = uiaxes(parent, 'Position', [960 350 380 300]);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
     
@@ -60,13 +60,13 @@ function onFileChange(view, model)
     handles = view.Brillouin;
     reps = Brillouin.repetitions;
     if (isempty(reps))
-        set(handles.repetitionCount, 'String', num2str(0));
+        set(handles.repetitionCount, 'Text', num2str(0));
         reps = {''};
     else
-        set(handles.repetitionCount, 'String', length(reps));
+        set(handles.repetitionCount, 'Text', num2str(length(reps)));
     end
-    set(handles.repetition, 'String', reps);
-    set(handles.repetition, 'Value', Brillouin.repetition.index);
+    set(handles.repetition, 'Items', reps);
+    set(handles.repetition, 'Value', Brillouin.repetition.name);
     
     if ~isempty(Brillouin.repetitions)
         try
@@ -106,20 +106,20 @@ function onFileChange(view, model)
                     set(ax, 'yDir', 'normal');
                 case 3
             end
-            set(handles.date, 'String', Brillouin.date);
+            set(handles.date, 'Text', Brillouin.date);
             %% Update field of view
             onFOVChange(view, model);
         catch
             if ishandle(view.Brillouin.plot)
                 delete(view.Brillouin.plot)
             end
-            set(handles.date, 'String', '');
+            set(handles.date, 'Text', '');
         end
     else
         if ishandle(view.Brillouin.plot)
             delete(view.Brillouin.plot)
         end
-        set(handles.date, 'String', '');
+        set(handles.date, 'Text', '');
     end
 end
 

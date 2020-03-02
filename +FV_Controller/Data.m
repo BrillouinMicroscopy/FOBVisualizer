@@ -60,13 +60,25 @@ function openFile(model, filePath)
         
         %% Find all measurements for Brillouin, Fluorescence and ODT
         % Brillouin
-        model.Brillouin.repetitions = model.file.getRepetitions('Brillouin');
+        Brillouin = model.Brillouin;
+        Brillouin.repetitions = model.file.getRepetitions('Brillouin');
+        Brillouin.repetition.index = 1;
+        Brillouin.repetition.name = Brillouin.repetitions{1};
+        model.Brillouin = Brillouin;
         
         % Fluorescence
-        model.Fluorescence.repetitions = model.file.getRepetitions('Fluorescence');
+        Fluorescence = model.Fluorescence;
+        Fluorescence.repetitions = model.file.getRepetitions('Fluorescence');
+        Fluorescence.repetition.index = 1;
+        Fluorescence.repetition.name = Fluorescence.repetitions{1};
+        model.Fluorescence = Fluorescence;
         
         % ODT
-        model.ODT.repetitions = model.file.getRepetitions('ODT');
+        ODT = model.ODT;
+        ODT.repetitions = model.file.getRepetitions('ODT');
+        ODT.repetition.index = 1;
+        ODT.repetition.name = ODT.repetitions{1};
+        model.ODT = ODT;
         
         model.controllers.Brillouin.loadRepetition();
         model.controllers.ODT.loadRepetition();

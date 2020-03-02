@@ -2,7 +2,7 @@ function callbacks = Brillouin(model, view)
 %% DATA Controller
 
     %% general panel
-    set(view.Brillouin.repetition, 'Callback', {@selectRepetition, model});
+    set(view.Brillouin.repetition, 'ValueChangedFcn', {@selectRepetition, model});
 
     callbacks = struct( ...
         'loadRepetition', @()loadRepetition(model, model.Brillouin.repetition), ...
@@ -12,8 +12,9 @@ end
 
 function selectRepetition(src, ~, model)
     val = get(src, 'Value');
-    repetition.index = val;
-    repetition.name = model.Brillouin.repetitions{val};
+    items = get(src, 'Items');
+    repetition.index = find([items{:}] == val);
+    repetition.name = model.Brillouin.repetitions{repetition.index};
     
     loadRepetition(model, repetition);
 

@@ -2,10 +2,10 @@ function callbacks = ODT(model, view)
 %% DATA Controller
 
     %% general panel
-    set(view.ODT.repetition, 'Callback', {@selectRepetition, model, view});
-    set(view.ODT.maxProj, 'Callback', {@toggleMaxProj, model, view});
+    set(view.ODT.repetition, 'ValueChangedFcn', {@selectRepetition, model, view});
+    set(view.ODT.maxProj, 'ValueChangedFcn', {@toggleMaxProj, model, view});
     
-    set(view.ODT.zDepth, 'StateChangedCallback', {@selectZDepth, model});
+    set(view.ODT.zDepth, 'ValueChangedFcn', {@selectZDepth, model});
 
     callbacks = struct( ...
         'loadRepetition', @()loadRepetition(model, view, model.ODT.repetition) ...
@@ -54,10 +54,8 @@ function loadRepetition(model, view, repetition)
             minZ = round(min(Z(:)));
             maxZ = round(max(Z(:)));
             spacingZ = round((maxZ - minZ) / 15);
-            set(view.ODT.zDepth, 'Maximum', maxZ);
-            set(view.ODT.zDepth, 'Minimum', minZ);
-            set(view.ODT.zDepth, 'MajorTickSpacing', spacingZ);
-            set(view.ODT.zDepth, 'MinorTickSpacing', spacingZ);
+            set(view.ODT.zDepth, 'Limits', [minZ maxZ]);
+            set(view.ODT.zDepth, 'MajorTicks', spacingZ * linspace(round(minZ/spacingZ), round(maxZ/spacingZ), 15));
             
         catch
             ODT.data = NaN;
