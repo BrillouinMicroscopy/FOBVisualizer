@@ -46,6 +46,11 @@ function loadRepetition(model, repetition)
             Brillouin.positions.y = data.results.parameters.positions.Y;
             Brillouin.positions.z = data.results.parameters.positions.Z;
             
+            Brillouin.intensity = data.results.results.peaksBrillouin_int;
+            Brillouin.validity = data.results.results.validity;
+            
+            Brillouin.validityLevel = data.results.results.peaksBrillouin_dev./data.results.results.peaksBrillouin_int;
+            
             dimensions = size(nanmean(Brillouin.shift, 4));
             dimension = sum(dimensions > 1);
             Brillouin.dimension = dimension;

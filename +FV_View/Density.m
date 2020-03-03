@@ -23,7 +23,7 @@ end
 function initGUI(~, view)
     parent = view.Density.parent;
     
-    axesImage = uiaxes(parent, 'Position', [500 10 380 300]);
+    axesImage = uiaxes(parent, 'Position', [500 10 390 300]);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
     
@@ -110,12 +110,14 @@ function onFileChange(view, model)
                     %% one dimensional case
                     rho = nanmean(model.density.rho, 4);
                     d = 1e-3*squeeze(rho);
-                    p = squeeze(positions.(Brillouin.nsdims{1}));
+                    p = squeeze(positions.(Brillouin.nsdims{1})) + Alignment.(['d' Brillouin.nsdims{1}]);
                     view.Density.plot = plot(ax, p, d, 'marker', 'x');
+                    axis(ax, 'normal');
+                    colorbar(ax, 'off');
                     xlim(ax, [min(p(:)), max(p(:))]);
                     ylim(ax, [min(d(:)), max(d(:))]);
-                    xlabel(ax, ['$' Brillouin.nsdims{1} '$ [$\mu$m]'], 'interpreter', 'latex');
-                    ylabel(ax, '$\rho$ [g/ml]', 'interpreter', 'latex');
+                    xlabel(ax, ['{\it ' Brillouin.nsdims{1} '} [µm]'], 'interpreter', 'tex');
+                    ylabel(ax, '\rho [g/ml]', 'interpreter', 'tex');
                 case 2
                     %% two dimensional case
                     rho = nanmean(model.density.rho, 4);
@@ -126,11 +128,10 @@ function onFileChange(view, model)
                     
                     view.Density.plot = imagesc(ax, pos.(Brillouin.nsdims{2})(1,:), pos.(Brillouin.nsdims{1})(:,1), d);
                     axis(ax, 'equal');
-                    xlabel(ax, ['$' Brillouin.nsdims{2} '$ [$\mu$m]'], 'interpreter', 'latex');
-                    ylabel(ax, ['$' Brillouin.nsdims{1} '$ [$\mu$m]'], 'interpreter', 'latex');
-        %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
+                    xlabel(ax, ['{\it ' Brillouin.nsdims{2} '} [µm]'], 'interpreter', 'tex');
+                    ylabel(ax, ['{\it ' Brillouin.nsdims{1} '} [µm]'], 'interpreter', 'tex');
                     cb = colorbar(ax);
-                    ylabel(cb, '$\rho$ [g/ml]', 'interpreter', 'latex');
+                    ylabel(cb, '\rho [g/ml]', 'interpreter', 'tex', 'FontSize', 10);
                     set(ax, 'yDir', 'normal');
                 case 3
             end
