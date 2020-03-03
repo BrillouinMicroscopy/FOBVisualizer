@@ -44,7 +44,7 @@ function initGUI(model, view)
 	zDepth = uislider(parent, 'Position', [140 680 280 3], 'Limits', [-10 10], 'MajorTicks', [-10 -8 -6 -4 -2 0 2 4 6 8 10], ...
         'Value', model.ODT.zDepth, 'Enable', ~model.ODT.maxProj);
     
-    axesImage = uiaxes(parent, 'Position', [30 350 380 300]);
+    axesImage = uiaxes(parent, 'Position', [30 350 390 300]);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
     
@@ -114,7 +114,7 @@ function onFileChange(view, model)
             ylabel(ax, '{\it y} [µm]', 'interpreter', 'tex');
             colormap(ax, 'jet');
             cb = colorbar(ax);
-            ylabel(cb, '{\it n}', 'interpreter', 'tex');
+            ylabel(cb, '{\it n}', 'interpreter', 'tex', 'FontSize', 10);
             caxis(ax, [n_m-.005 n_s]);
             set(ax, 'yDir', 'normal');
 %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');

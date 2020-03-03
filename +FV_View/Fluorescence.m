@@ -39,7 +39,7 @@ function initGUI(~, view)
     date = uilabel(parent, 'Text', '', 'Position', [600 670 300 20], ...
         'HorizontalAlignment', 'left');
     
-    axesImage = uiaxes(parent, 'Position', [500 350 380 300]);
+    axesImage = uiaxes(parent, 'Position', [500 350 390 300]);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
              
@@ -104,11 +104,11 @@ function onFileChange(view, model)
             view.Fluorescence.plot = imagesc(ax, x, y, image);
             shading(ax, 'flat');
             axis(ax, 'equal');
-            xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
-            ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
+            xlabel(ax, '{\it x} [µm]', 'interpreter', 'tex');
+            ylabel(ax, '{\it y} [µm]', 'interpreter', 'tex');
             caxis(ax, [min(image(:)), max(image(:))]);
             cb = colorbar(ax);
-            ylabel(cb, '$I$ [a.u.]', 'interpreter', 'latex');
+            ylabel(cb, '{\it I} [a.u.]', 'interpreter', 'tex', 'FontSize', 10);
             type = lower(type);
             switch (type)
                 case 'brightfield'
@@ -126,7 +126,6 @@ function onFileChange(view, model)
                     blueColor(:,3)=linspace(0,1,64);
                     colormap(ax, blueColor);
             end
-%             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
             set(ax, 'yDir', 'normal');
             onFOVChange(view, model);
             onAlignment(view, model);
