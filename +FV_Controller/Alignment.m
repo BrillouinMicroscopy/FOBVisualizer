@@ -112,11 +112,15 @@ function start(~, ~, model, view)
                     opts = fitoptions('Method', 'NonlinearLeastSquares');
                     opts.Display = 'Off';
                     opts.StartPoint = [a b c d];
+                    opts.Lower = [a -Inf -Inf 0.5*d];
+                    opts.Upper = [0 Inf Inf 1.5*d];
                     [fitresult, ~] = fit(pos.z(~isnan(BS_int)), BS_int(~isnan(BS_int)), ft, opts);
                     fitted_curve = fitresult.a ./ (1 + exp(-fitresult.b * (pos.z - fitresult.c) )) + fitresult.d;
                     
+                    [~, ind] = min(abs(fitted_curve - fitresult.d/2));
+                    
                     %% Save alignment
-                    dz = model.Alignment.z0 - fitresult.c;
+                    dz = model.Alignment.z0 - pos.z(ind);
                     set(view.Alignment.dz, 'String', dz);
                     
                     %% Plot results
@@ -128,7 +132,7 @@ function start(~, ~, model, view)
                     plot(ax, z, BS_int, 'marker', 'x', 'linestyle', ':', 'color', [0, 0.4470, 0.7410]);
                     hold(ax, 'on');
                     plot(ax, z, fitted_curve, 'linestyle', '-', 'color', [0.8500, 0.3250, 0.0980]);
-                    plot(ax, [fitresult.c, fitresult.c] + dz, [0 y_max], 'Linewidth', 1.5, 'linestyle', '-', 'color', [0.4660, 0.6740, 0.1880]);
+                    plot(ax, [pos.z(ind), pos.z(ind)] + dz, [0 y_max], 'Linewidth', 1.5, 'linestyle', '-', 'color', [0.4660, 0.6740, 0.1880]);
                     ylim(ax, [0 y_max]);
                     xlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
                     ylabel(ax, '$I$ [a.u.]', 'interpreter', 'latex');
