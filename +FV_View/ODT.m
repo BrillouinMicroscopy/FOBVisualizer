@@ -20,36 +20,31 @@ end
 function initGUI(model, view)
     parent = view.ODT.parent;
     
-    uicontrol('Parent', parent, 'Style','text','String','ODT repetition:', 'Units', 'normalized',...
-               'Position',[0.01,0.885,0.15,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    repetition = uicontrol('Parent', parent, 'Style','popup', 'Units', 'normalized',...
-               'Position',[0.14,0.91,0.05,0.005], 'FontSize', 11, 'HorizontalAlignment', 'left', 'String', {''});
-    uicontrol('Parent', parent, 'Style','text','String','of', 'Units', 'normalized',...
-               'Position',[0.20,0.885,0.02,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    repetitionCount = uicontrol('Parent', parent, 'Style','text','String','0', 'Units', 'normalized',...
-               'Position',[0.22,0.885,0.02,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    uilabel(parent, 'Text', 'ODT repetition:', 'Position', [10 710 100 20], ...
+        'HorizontalAlignment', 'left');
+    repetition = uidropdown(parent, 'Position', [140 710 100 20], ...
+        'Items', {''});
+    uilabel(parent, 'Text', 'of', 'Position', [260 710 30 20], ...
+        'HorizontalAlignment', 'left');
+    repetitionCount = uilabel(parent, 'Text', '0', 'Position', [290 710 30 20], ...
+        'HorizontalAlignment', 'left');
     
-    uicontrol('Parent', parent, 'Style','text','String','Date:', 'Units', 'normalized',...
-               'Position',[0.01,0.85,0.15,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    date = uicontrol('Parent', parent, 'Style','text','String','', 'Units', 'normalized',...
-               'Position',[0.14,0.85,0.19,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    uilabel(parent, 'Text', 'Date:', 'Position', [10 690 100 20], ...
+        'HorizontalAlignment', 'left');
+    date = uilabel(parent, 'Text', '', 'Position', [140 690 300 20], ...
+        'HorizontalAlignment', 'left');
     
-    maxProj = uicontrol('Parent', parent, 'Style', 'checkbox', 'Units', 'normalized',...
-        'Position', [0.06,0.815,0.01,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left', 'tag', 'Borders', 'value', model.ODT.maxProj);
+    uilabel(parent, 'Text', 'Max. proj.:','Position', [10 670 100 20], ...
+        'HorizontalAlignment', 'left');
+    maxProj = uicheckbox(parent, 'Position', [70 670 100 20], ...
+        'FontSize', 11, 'tag', 'Borders', 'value', model.ODT.maxProj, 'Text', '');
     
-    uicontrol('Parent', parent, 'Style', 'text', 'String', 'Max. proj.:', 'Units', 'normalized',...
-        'Position', [0.01,0.815,0.05,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
-           
-    uicontrol('Parent', parent, 'Style','text','String', 'z [µm]:', 'Units', 'normalized',...
-               'Position',[0.08,0.815,0.05,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    uilabel(parent, 'Text', 'z [µm]:', 'Position', [90 670 80 20], ...
+        'HorizontalAlignment', 'left');
+	zDepth = uislider(parent, 'Position', [140 680 280 3], 'Limits', [-10 10], 'MajorTicks', [-10 -8 -6 -4 -2 0 2 4 6 8 10], ...
+        'Value', model.ODT.zDepth, 'Enable', ~model.ODT.maxProj);
     
-    zDepth = javax.swing.JSlider;
-    zDepth.setEnabled(~model.ODT.maxProj);
-    javacomponent(zDepth, [160, 645, 260,35], parent);
-    set(zDepth, 'MajorTickSpacing', 2, 'PaintLabels', true, 'PaintTicks', true, 'Minimum', -10, 'Maximum', 10);
-    zDepth.setValue(model.ODT.zDepth);
-    
-    axesImage = axes('Parent', parent, 'Position', [0.03 .46 .26 .34]);
+    axesImage = uiaxes(parent, 'Position', [30 350 380 300]);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
     
@@ -77,22 +72,22 @@ function onFileChange(view, model)
     handles = view.ODT;
     reps = ODT.repetitions;
     if (isempty(reps))
-        set(handles.repetitionCount, 'String', num2str(0));
+        set(handles.repetitionCount, 'Text', num2str(0));
         reps = {''};
     else
-        set(handles.repetitionCount, 'String', length(reps));
+        set(handles.repetitionCount, 'Text', num2str(length(reps)));
     end
-    set(handles.repetition, 'String', reps);
-    set(handles.repetition, 'Value', ODT.repetition.index);
+    set(handles.repetition, 'Items', reps);
+    set(handles.repetition, 'Value', ODT.repetition.name);
     
     set(handles.maxProj, 'Value', ODT.maxProj);
-    set(handles.zDepth, 'Enabled', ~ODT.maxProj);
+    set(handles.zDepth, 'Enable', ~ODT.maxProj);
     
     if ~isempty(ODT.repetitions)
         try
             ax = handles.axesImage;
             
-            set(handles.date, 'String', ODT.date);
+            set(handles.date, 'Text', ODT.date);
             
             positions = ODT.positions;
             
@@ -115,12 +110,12 @@ function onFileChange(view, model)
             
             view.ODT.plot = imagesc(ax, positions.x(1,:,1), positions.y(:,1,1), slice);
             axis(ax, 'equal');
-            xlabel(ax, '$x$ [$\mu$m]', 'interpreter', 'latex');
-            ylabel(ax, '$y$ [$\mu$m]', 'interpreter', 'latex');
+            xlabel(ax, '{\it x} [µm]', 'interpreter', 'tex');
+            ylabel(ax, '{\it y} [µm]', 'interpreter', 'tex');
             colormap(ax, 'jet');
             cb = colorbar(ax);
-            ylabel(cb, '$n$', 'interpreter', 'latex');
-            caxis(ax, [n_m-0.005 n_s]);
+            ylabel(cb, '{\it n}', 'interpreter', 'tex');
+            caxis(ax, [n_m-.005 n_s]);
             set(ax, 'yDir', 'normal');
 %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
             onFOVChange(view, model);
@@ -129,13 +124,13 @@ function onFileChange(view, model)
             if ishandle(view.ODT.plot)
                 delete(view.ODT.plot)
             end
-            set(handles.date, 'String', '');
+            set(handles.date, 'Text', '');
         end
     else
         if ishandle(view.ODT.plot)
             delete(view.ODT.plot)
         end
-        set(handles.date, 'String', '');
+        set(handles.date, 'Text', '');
     end
 end
 

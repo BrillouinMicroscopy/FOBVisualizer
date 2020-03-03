@@ -14,18 +14,18 @@ end
 function initGUI(~, view)
     parent = view.data.parent;
 
-    file_information = uipanel('Parent', parent, 'Title', 'File information', 'FontSize', 11,...
-                 'Position', [.01 .93 .98 .065]);
+    file_information = uipanel(parent, 'Title', 'File information', ...
+        'Position', [10 745 1380 50]);
     
-    uicontrol('Parent', file_information, 'Style','text','String','Filename:', 'Units', 'normalized',...
-               'Position',[0.01,0.3,0.05,0.6], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    filename = uicontrol('Parent', file_information, 'Style','text', 'Units', 'normalized',...
-               'Position',[0.065,0.3,0.6,0.6], 'FontSize', 11, 'HorizontalAlignment', 'left', 'String', '');
+    uilabel(file_information, 'Text', 'Filename:', ...
+        'Position',[10 5 60 20], 'HorizontalAlignment', 'left');
+    filename = uilabel(file_information, 'Text', '', ...
+        'Position',[75 5 725 20], 'HorizontalAlignment', 'left');
     
-    uicontrol('Parent', file_information, 'Style','text','String','Date:', 'Units', 'normalized',...
-               'Position',[0.65,0.3,0.03,0.6], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    date = uicontrol('Parent', file_information, 'Style','text', 'Units', 'normalized',...
-               'Position',[0.685,0.3,0.2,0.6], 'FontSize', 11, 'HorizontalAlignment', 'left', 'String', '');
+    uilabel(file_information, 'Text', 'Date:', ...
+        'Position', [910 5 50 20], 'HorizontalAlignment', 'left');
+    date = uilabel(file_information, 'Text', '', ...
+        'Position', [965 5 425 20], 'HorizontalAlignment', 'left');
     
     %% Return handles
     view.data = struct(...
@@ -45,10 +45,10 @@ function onFileLoad(view, model)
     handles = view.data;
     
     if isa(model.file,'FV_Utils.HDF5Storage.h5bm') && isvalid(model.file)
-        set(handles.filename, 'String', [model.filepath model.filename]);
-        set(handles.date, 'String', model.file.date);
+        set(handles.filename, 'Text', [model.filepath model.filename]);
+        set(handles.date, 'Text', model.file.date);
     else
-        set(handles.filename, 'String', '');
-        set(handles.date, 'String', '');
+        set(handles.filename, 'Text', '');
+        set(handles.date, 'Text', '');
     end
 end

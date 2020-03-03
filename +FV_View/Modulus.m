@@ -23,9 +23,9 @@ end
 function initGUI(~, view)
     parent = view.Modulus.parent;
     
-    axesImage = axes('Parent', parent, 'Position', [0.69 .055 .26 .34]);
+    axesImage = uiaxes(parent, 'Position', [960 10 380 300]);
     axis(axesImage, 'equal');
-    box(axesImage, 'on');
+    axesImage.Box = 'on';
     
     %% Return handles
     view.Modulus = struct(...

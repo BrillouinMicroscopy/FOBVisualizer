@@ -20,26 +20,26 @@ end
 function initGUI(~, view)
     parent = view.Fluorescence.parent;
     
-    uicontrol('Parent', parent, 'Style','text','String','Fluorescence repetition:', 'Units', 'normalized',...
-               'Position',[0.34,0.885,0.15,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    repetition = uicontrol('Parent', parent, 'Style','popup', 'Units', 'normalized',...
-               'Position',[0.47,0.91,0.05,0.005], 'FontSize', 11, 'HorizontalAlignment', 'left', 'String', {''});
-    uicontrol('Parent', parent, 'Style','text','String','of', 'Units', 'normalized',...
-               'Position',[0.53,0.885,0.02,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    repetitionCount = uicontrol('Parent', parent, 'Style','text','String','0', 'Units', 'normalized',...
-               'Position',[0.55,0.885,0.02,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
+    uilabel(parent, 'Text', 'Fluorescence repetition:', 'Position', [470 710 130 20], ...
+        'HorizontalAlignment', 'left');
+    repetition = uidropdown(parent, 'Position', [600 710 100 20], ...
+        'Items', {''});
+    uilabel(parent, 'Text', 'of', 'Position', [720 710 30 20], ...
+        'HorizontalAlignment', 'left');
+    repetitionCount = uilabel(parent, 'Text', '0', 'Position', [750 710 30 20], ...
+        'HorizontalAlignment', 'left');
     
-    uicontrol('Parent', parent, 'Style','text','String','Channel:', 'Units', 'normalized',...
-               'Position',[0.34,0.85,0.15,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    channels = uicontrol('Parent', parent, 'Style','popup', 'Units', 'normalized',...
-               'Position',[0.47,0.875,0.1,0.005], 'FontSize', 11, 'HorizontalAlignment', 'left', 'String', {''}, 'Value', 1);
+    uilabel(parent, 'Text', 'Channel:', 'Position', [470 690 100 20], ...
+        'HorizontalAlignment', 'left');
+    channels = uidropdown(parent, 'Position', [600 690 200 18], ...
+        'Items', {''});
     
-    uicontrol('Parent', parent, 'Style','text','String','Date:', 'Units', 'normalized',...
-               'Position',[0.34,0.815,0.15,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    date = uicontrol('Parent', parent, 'Style','text', 'Units', 'normalized',...
-               'Position',[0.47,0.815,0.19,0.025], 'FontSize', 11, 'HorizontalAlignment', 'left', 'String', '');
+    uilabel(parent, 'Text', 'Date:', 'Position', [470 670 100 20], ...
+        'HorizontalAlignment', 'left');
+    date = uilabel(parent, 'Text', '', 'Position', [600 670 300 20], ...
+        'HorizontalAlignment', 'left');
     
-    axesImage = axes('Parent', parent, 'Position', [0.36 .46 .26 .34]);
+    axesImage = uiaxes(parent, 'Position', [500 350 380 300]);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
              
@@ -66,30 +66,32 @@ function onFileChange(view, model)
     handles = view.Fluorescence;
     reps = Fluorescence.repetitions;
     if (isempty(reps))
-        set(handles.repetitionCount, 'String', num2str(0));
+        set(handles.repetitionCount, 'Text', num2str(0));
         reps = {''};
     else
-        set(handles.repetitionCount, 'String', length(reps));
+        set(handles.repetitionCount, 'Text', num2str(length(reps)));
     end
-    set(handles.repetition, 'String', reps);
-    set(handles.repetition, 'Value', Fluorescence.repetition.index);
+    set(handles.repetition, 'Items', reps);
+    set(handles.repetition, 'Value', Fluorescence.repetition.name);
 
     if ~isempty(Fluorescence.repetitions)
         try
-            imageNames = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'memberNames');
-            if (Fluorescence.channel >= length(imageNames))
-                Fluorescence.channel = 0;
+            channelNames = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'memberNames');
+            if (Fluorescence.channel > length(channelNames))
+                Fluorescence.channel = 1;
             end
-            set(handles.channels, 'String', imageNames);
-            set(handles.channels, 'Value', Fluorescence.channel+1);
+            
+            channelName = channelNames{Fluorescence.channel};
+            set(handles.channels, 'Items', channelNames);
+            set(handles.channels, 'Value', channelName);
             
             ax = handles.axesImage;
-            type = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'channel', Fluorescence.channel);
+            type = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'channel', channelName);
             
-            image = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'data', Fluorescence.channel);
+            image = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'data', channelName);
             image = medfilt1(image, 3);
-            date = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'date', Fluorescence.channel);
-            set(handles.date, 'String', date);
+            date = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'date', channelName);
+            set(handles.date, 'Text', date);
             
             x = 4.8*(1:size(image, 1))/57;
             x = x - nanmean(x(:));
@@ -132,17 +134,17 @@ function onFileChange(view, model)
             if ishandle(view.Fluorescence.plot)
                 delete(view.Fluorescence.plot)
             end
-            set(handles.channels, 'String', {''});
-            set(handles.channels, 'Value', 1);
-            set(handles.date, 'String', '');
+            set(handles.channels, 'Items', {''});
+            set(handles.channels, 'Value', '');
+            set(handles.date, 'Text', '');
         end
     else
         if ishandle(view.Fluorescence.plot)
             delete(view.Fluorescence.plot)
         end
-        set(handles.channels, 'String', {''});
-        set(handles.channels, 'Value', 1);
-        set(handles.date, 'String', '');
+        set(handles.channels, 'Items', {''});
+        set(handles.channels, 'Value', '');
+        set(handles.date, 'Text', '');
     end
 end
 

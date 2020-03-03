@@ -23,41 +23,39 @@ end
 function initGUI(~, view)
     parent = view.Density.parent;
     
-    axesImage = axes('Parent', parent, 'Position', [0.36 .055 .26 .34]);
+    axesImage = uiaxes(parent, 'Position', [500 10 380 300]);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
     
-    densityGroup = uipanel('Parent', parent, 'Title', 'Density calculation', 'FontSize', 11,...
-             'Position', [.03 .055 .2 .35]);
+    densityGroup = uipanel('Parent', parent, 'Title', 'Density calculation', ...
+        'Position', [10 10 400 300]);
     
-    uicontrol('Parent', densityGroup, 'Style', 'text', 'String', 'Refractive index n of the medium [1]:', 'Units', 'normalized',...
-        'Position', [0.05,0.83,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    n0 = uicontrol('Parent', densityGroup, 'Style', 'edit', 'Units', 'normalized',...
-        'Position', [0.6,0.85,0.35,0.1], 'FontSize', 11, 'HorizontalAlignment', 'center', 'Tag', 'floor');
+    uilabel(densityGroup, 'Text', {'Refractive index n of', 'the medium [1]:'}, ...
+        'Position', [10 240 130 40], 'HorizontalAlignment', 'left');
+    n0 = uieditfield(densityGroup, 'numeric', ...
+        'Position', [150 245 100 25], 'HorizontalAlignment', 'center', 'Tag', 'floor');
     
-    uicontrol('Parent', densityGroup, 'Style', 'text', 'String', 'Refractive index increment [ml/g]:', 'Units', 'normalized',...
-        'Position', [0.05,0.66,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    alpha = uicontrol('Parent', densityGroup, 'Style', 'edit', 'Units', 'normalized',...
-        'Position', [0.6,0.68,0.35,0.1], 'FontSize', 11, 'HorizontalAlignment', 'center', 'Tag', 'floor');
+    uilabel(densityGroup, 'Text', {'Refractive index', 'increment [ml/g]:'}, ...
+        'Position', [10 200 130 40], 'HorizontalAlignment', 'left');
+    alpha = uieditfield(densityGroup, 'numeric', ...
+        'Position', [150 205 100 25], 'HorizontalAlignment', 'center', 'Tag', 'floor');
     
-    uicontrol('Parent', densityGroup, 'Style', 'text', 'String', 'Absolute density of the medium [g/ml]:', 'Units', 'normalized',...
-        'Position', [0.05,0.49,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    rho0 = uicontrol('Parent', densityGroup, 'Style', 'edit', 'Units', 'normalized',...
-        'Position', [0.6,0.51,0.35,0.1], 'FontSize', 11, 'HorizontalAlignment', 'center', 'Tag', 'floor');
+    uilabel(densityGroup, 'Text', {'Absolute density of', 'the medium [g/ml]:'}, ...
+        'Position', [10 160 130 40], 'HorizontalAlignment', 'left');
+    rho0 = uieditfield(densityGroup, 'numeric', ...
+        'Position', [150 165 100 25], 'HorizontalAlignment', 'center', 'Tag', 'floor');
     
-    uicontrol('Parent', densityGroup, 'Style', 'text', 'String', 'Use absolute density of dry fraction', 'Units', 'normalized',...
-        'Position', [0.05,0.32,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left');
-    useDryDensity = uicontrol('Parent', densityGroup, 'Style', 'checkbox', 'Units', 'normalized',...
-        'Position', [0.89,0.34,0.14,0.1], 'FontSize', 11, 'HorizontalAlignment', 'left', 'tag', 'Borders');
+    uilabel(densityGroup, 'Text', {'Use absolute density', 'of dry fraction'}, ...
+        'Position', [10 120 130 40], 'HorizontalAlignment', 'left');
+    useDryDensity = uicheckbox(densityGroup, 'Position', [192 125 15 25], ...
+        'tag', 'Borders', 'Text', '');
     
-    rho_dry_label = uicontrol('Parent', densityGroup, 'Style', 'text', 'String', 'Absolute density of the dry fraction [g/ml]:', 'Units', 'normalized',...
-        'Position', [0.05,0.15,0.53,0.15], 'FontSize', 11, 'HorizontalAlignment', 'left', 'enable', 'off');
-    rho_dry = uicontrol('Parent', densityGroup, 'Style', 'edit', 'Units', 'normalized',...
-        'Position', [0.6,0.17,0.35,0.1], 'FontSize', 11, 'HorizontalAlignment', 'center', 'Tag', 'floor', 'enable', 'off');
+    rho_dry_label = uilabel(densityGroup, 'Text', {'Absolute density of', 'the dry fraction [g/ml]:'}, ...
+        'Position', [10 80 130 40], 'HorizontalAlignment', 'left', 'enable', 'off');
+    rho_dry = uieditfield(densityGroup, 'numeric', ...
+        'Position', [150 85 100 25], 'HorizontalAlignment', 'center', 'Tag', 'floor', 'enable', 'off');
 
-    openMasking = uicontrol('Parent', densityGroup, 'Style', 'pushbutton', 'Units', 'normalized',...
-        'String','Masking','Position',[0.6,0.03,0.35,0.1],...
-        'FontSize', 11, 'HorizontalAlignment', 'left');
+    openMasking = uibutton(densityGroup, 'Text', 'Masking', 'Position', [150 45 100 25], 'BackgroundColor', [.9 .9 .9]);
     
     %% Return handles
     view.Density = struct(...
@@ -83,12 +81,12 @@ function onFileChange(view, model)
     Brillouin = model.Brillouin;
     Alignment = model.Alignment;
     
-    set(view.Density.n0, 'String', model.density.n0);
-    set(view.Density.alpha, 'String', model.density.alpha);
-    set(view.Density.rho0, 'String', model.density.rho0);
-    set(view.Density.rho_dry, 'String', model.density.rho_dry);
+    set(view.Density.n0, 'Value', model.density.n0);
+    set(view.Density.alpha, 'Value', model.density.alpha);
+    set(view.Density.rho0, 'Value', model.density.rho0);
+    set(view.Density.rho_dry, 'Value', model.density.rho_dry);
     
-    set(view.Density.useDryDensity, 'value', model.density.useDryDensity);
+    set(view.Density.useDryDensity, 'Value', model.density.useDryDensity);
     if model.density.useDryDensity
         set(view.Density.rho_dry_label, 'enable', 'on');
         set(view.Density.rho_dry, 'enable', 'on');
