@@ -85,6 +85,7 @@ function onFileChange(view, model)
                     d = squeeze(BS);
                     p = squeeze(positions.(Brillouin.nsdims{1})) + Alignment.(['d' Brillouin.nsdims{1}]);
                     view.Brillouin.plot = plot(ax, p, d, 'marker', 'x');
+                    axis(ax, 'normal');
                     xlim(ax, [min(p(:)), max(p(:))]);
                     ylim(ax, [min(d(:)), max(d(:))]);
                     xlabel(ax, ['$' Brillouin.nsdims{1} '$ [$\mu$m]'], 'interpreter', 'latex');
