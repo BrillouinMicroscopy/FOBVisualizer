@@ -146,7 +146,7 @@ function calculateDensity(model)
 end
 
 function setValue(src, ~, model, value)
-    model.density.(value) = str2double(get(src, 'String'));
+    model.density.(value) = get(src, 'Value');
     calculateDensity(model);
 end
 
