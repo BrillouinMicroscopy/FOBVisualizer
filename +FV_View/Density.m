@@ -118,6 +118,11 @@ function onFileChange(view, model)
                     ylim(ax, [min(d(:)), max(d(:))]);
                     xlabel(ax, ['{\it ' Brillouin.nsdims{1} '} [µm]'], 'interpreter', 'tex');
                     ylabel(ax, '\rho [g/ml]', 'interpreter', 'tex');
+                    if strcmp(Brillouin.nsdims{1}, 'z')
+                        hold(ax, 'on');
+                        plot(ax, [Alignment.z0, Alignment.z0], [min(d(:)), max(d(:))], 'Linewidth', 1.5, 'color', [0.4660, 0.6740, 0.1880]);
+                        hold(ax, 'off');
+                    end
                 case 2
                     %% two dimensional case
                     rho = nanmean(model.density.rho, 4);
