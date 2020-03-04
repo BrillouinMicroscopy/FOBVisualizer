@@ -19,26 +19,22 @@ function callbacks = Alignment(model, view)
 end
 
 function findz0(~, ~, model, view)
-    %% Average refractive index along x- and y-direction, remove constant component
-    RI_proj = flipud(double(squeeze(mean(mean(model.ODT.data.Reconimg, 1), 2))));
-    RI_proj = RI_proj - median(RI_proj, 'all');
-    z = flipud(squeeze(model.ODT.positions.z(1,1,:)));
+    %% Extract RI of the medium
+    RI_medium = nanmedian(model.ODT.data.Reconimg(:));
     
-    %% Interpolate refractive index
-    z_int = linspace(min(z), max(z), 10*numel(z));
-    RI_proj_int = interp1(z, RI_proj, z_int, 'spline');
+    %% Calculate area of pixels with a RI larger than the medium, i.e. cells
+    area = NaN(size(model.ODT.data.Reconimg, 3), 1);
+    for jj = 1:size(model.ODT.data.Reconimg, 3)
+        RI = model.ODT.data.Reconimg(:, :, jj);
+
+        area(jj) = sum(RI(RI > RI_medium), 'all');
+    end
     
-    %%
-    RI_proj_int_mean = movmean(RI_proj_int, 50);
-    RI_proj_int_mean_d1 = diff(RI_proj_int_mean);
-    RI_proj_int_mean_d2 = diff(movmean(RI_proj_int_mean_d1, 50));
+    %% Find position of the maximum
+    [~, indZ] = max(area);
     
-    RI_proj_int_mean_d2_valid = RI_proj_int_mean_d2;
-    RI_proj_int_mean_d2_valid(RI_proj_int_mean_d1(1:end-1) < 0) = NaN;
-    
-    [~, indZ] = nanmax(RI_proj_int_mean_d2_valid);
-    
-    z0 = z_int(indZ);
+    z = squeeze(model.ODT.positions.z(1, 1, :));
+    z0 = z(indZ);
     model.Alignment.z0 = z0;
     
     set(view.Alignment.z0, 'String', z0);
@@ -46,28 +42,14 @@ function findz0(~, ~, model, view)
     %% Plot results
     ax = view.Alignment.ODT;
     hold(ax, 'off');
-    view.Alignment.ODT_plot = plot(ax, z, RI_proj, 'linestyle', 'none', 'marker', 'x');
+    view.Alignment.ODT_plot = plot(ax, z, area);
     hold(ax, 'on');
-    plot(ax, z_int, RI_proj_int_mean);
-    plot(ax, z_int(1:end-1), 100*RI_proj_int_mean_d1);
-    plot(ax, z_int(1:end-2), 1000*RI_proj_int_mean_d2);
-    % Find min and max values of all arrays
-    y_min1 = min(RI_proj_int_mean, [], 'all');
-    y_max1 = max(RI_proj_int_mean, [], 'all');
-    y_min2 = min(100*RI_proj_int_mean_d1, [], 'all');
-    y_max2 = max(100*RI_proj_int_mean_d1, [], 'all');
-    y_min3 = min(1000*RI_proj_int_mean_d2, [], 'all');
-    y_max3 = max(1000*RI_proj_int_mean_d2, [], 'all');
-    y_min = min([y_min1 y_min2 y_min3]);
-    y_max = max([y_max1 y_max2 y_max3]);
-    dy = y_max - y_min;
-    y_lim = [y_min y_max] + [-0.05 0.05] * dy;
-    ylim(ax, y_lim);
-    plot(ax, [z0, z0], y_lim, 'Linewidth', 1.5);
-    xlim(ax, [min(z_int), max(z_int)]);
+    y_lim = get(ax, 'ylim');
+    plot(ax, [z0, z0], y_lim, 'Linewidth', 1.5, 'color', [0.4660, 0.6740, 0.1880]);
+    xlim(ax, [min(z), max(z)]);
     xlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
-    ylabel(ax, '$\Delta n$ [a.u.]', 'interpreter', 'latex');
-    legend(ax, 'Measured', 'Interpolated and smoothed', '1st derivative', '2nd derivative', 'Detected interface');
+    ylabel(ax, 'area [a.u.]', 'interpreter', 'latex');
+    legend(ax, 'Cell area', 'Detected interface');
 end
 
 function start(~, ~, model, view)
