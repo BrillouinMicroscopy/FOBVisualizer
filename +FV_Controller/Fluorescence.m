@@ -12,7 +12,7 @@ end
 function selectRepetition(src, ~, model)
     val = get(src, 'Value');
     items = get(src, 'Items');
-    repetition.index = find([items{:}] == val);
+    repetition.index = find(strcmp(items, val));
     repetition.name = model.Fluorescence.repetitions{repetition.index};
     model.Fluorescence.repetition = repetition;
 end
@@ -20,5 +20,5 @@ end
 function selectChannel(src, ~, model)
     val = get(src, 'Value');
     items = get(src, 'Items');
-    model.Fluorescence.channel = find([items{:}] == val);
+    model.Fluorescence.channel = find(strcmp(items, val));
 end

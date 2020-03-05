@@ -15,7 +15,7 @@ end
 function selectRepetition(src, ~, model, view)
     val = get(src, 'Value');
     items = get(src, 'Items');
-    repetition.index = find([items{:}] == val);
+    repetition.index = find(strcmp(items, val));
     repetition.name = model.ODT.repetitions{repetition.index};
     
     loadRepetition(model, view, repetition);
