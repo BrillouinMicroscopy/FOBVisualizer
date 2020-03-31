@@ -40,44 +40,14 @@ function plotBrillouinModulus(parameters)
                     BrillouinIntensity = BMresults.results.results.peaksBrillouin_int;
                     validity = BMresults.results.results.validity;
                     validityLevel = BMresults.results.results.peaksBrillouin_dev./BMresults.results.results.peaksBrillouin_int;
-
-                    dims = {'X', 'Y', 'Z'};
-                    for kk = 1:length(dims)
-                        pos.([dims{kk} '_zm']) = ...
-                            BMresults.results.parameters.positions.(dims{kk});
-                        pos.([dims{kk} '_zm']) = squeeze(pos.([dims{kk} '_zm']));
-                    end
-                    pos.X_zm = pos.X_zm + alignment.Alignment.dx;
-                    pos.Y_zm = pos.Y_zm + alignment.Alignment.dy;
-                    pos.Z_zm = pos.Z_zm + alignment.Alignment.dz;
-
-                    %% Calculate the FOV for the RI measurements
-                    nrPix = 342;%size(BMresults.results.results.RISection, 1);
-                    res = 0.2530;
-                    pos.X_zm_RI = ((1:nrPix) - nrPix/2) * res;
-                    pos.Y_zm_RI = pos.X_zm_RI;
-
-                    %% Plot Brillouin Shift
+                    
                     % filter invalid values
                     BrillouinShift(~validity) = NaN;
                     BrillouinShift(validityLevel > parameters.BM.validity) = NaN;
 
                     % average results
                     BS_mean = nanmean(BrillouinShift, 4);
-
-                    names = {};
-                    try
-                        masks = BMresults.results.results.masks;
-                    catch
-                        masks = {};
-                    end
-
-                    plotData(parameters.path, BS_mean, pos, parameters.BM.shift.cax, '$\nu_\mathrm{B}$ [GHz]', ...
-                        [alignmentFilename '_shift'], 0, masks, names);
-                    plotData(parameters.path, BS_mean, pos, parameters.BM.shift.cax, '$\nu_\mathrm{B}$ [GHz]', ...
-                        [alignmentFilename '_shift_outline'], 1, masks, names);
-
-                    %% Plot Brillouin intensity
+                    
                     % filter invalid values
                     BrillouinIntensity(~validity) = NaN;
                     BrillouinIntensity(validityLevel > parameters.BM.validity) = NaN;
@@ -85,21 +55,95 @@ function plotBrillouinModulus(parameters)
                     % average results
                     BI_mean = nanmean(BrillouinIntensity, 4);
                     BI_mean = BI_mean./max(BI_mean(:));
-
-                    plotData(parameters.path, BI_mean, pos, parameters.BM.intensity.cax, '$I$ [a.u.]', ...
-                        [alignmentFilename '_int'], 0, masks, names);
-
-                    %% Plot longitudinal modulus
+                    
                     M = 1e-9*alignment.modulus.M;
 
                     % filter invalid values
                     M(~validity) = NaN;
                     M(validityLevel > parameters.Modulus.validity) = NaN;
-                    
+
                     M_mean = nanmean(M, 4);
 
-                    plotData(parameters.path, M_mean, pos, parameters.Modulus.M.cax, ...
-                        '$M$ [GPa]', [alignmentFilename '_modulus'], 0, masks, names);
+                    %% Calculate zero mean positions
+                    dims = {'X', 'Y', 'Z'};
+                    dimslabel = {'x', 'y', 'z'};
+                    for kk = 1:length(dims)
+                        pos.([dims{kk}]) = ...
+                            BMresults.results.parameters.positions.(dims{kk});
+                        pos.([dims{kk}]) = squeeze(pos.([dims{kk}]));
+                    end
+                    pos.X = pos.X + alignment.Alignment.dx;
+                    pos.Y = pos.Y + alignment.Alignment.dy;
+                    pos.Z = pos.Z + alignment.Alignment.dz;
+                    
+                    %% Find the dimension of the measurement
+                    dimensions = size(BS_mean);
+                    dimension = sum(dimensions > 1);
+                    Brillouin.dimension = dimension;
+                    
+                    %% Find non-singular dimensions
+                    nsdims = cell(dimension,1);
+                    sdims = cell(dimension,1);
+                    nsdimslabel = cell(dimension,1);
+                    ind = 0;
+                    sind = 0;
+                    for kk = 1:length(dimensions)
+                        if dimensions(kk) > 1
+                            ind = ind + 1;
+                            nsdims{ind} = dims{kk};
+                            nsdimslabel{ind} = ['$' dimslabel{kk} '$ [$\mu$m]'];
+                        else
+                            sind = sind + 1;
+                            sdims{sind} = dims{kk};
+                        end
+                    end
+                    Brillouin.nsdims = nsdims;
+                    Brillouin.nsdimslabel = nsdimslabel;
+                    Brillouin.sdims = sdims;
+                    
+                    switch (Brillouin.dimension)
+                        case 0
+                        case 1
+                            %% Plot Brillouin shift
+                            plotData1D(parameters.path, BS_mean, pos, parameters.BM.shift.cax, '$\nu_\mathrm{B}$ [GHz]', ...
+                                [alignmentFilename '_shift'], Brillouin);
+
+                            %% Plot Brillouin intensity
+                            plotData1D(parameters.path, BI_mean, pos, parameters.BM.intensity.cax, '$I$ [a.u.]', ...
+                                [alignmentFilename '_int'], Brillouin);
+
+                            %% Plot longitudinal modulus
+                            plotData1D(parameters.path, M_mean, pos, parameters.Modulus.M.cax, ...
+                                '$M$ [GPa]', [alignmentFilename '_modulus'], Brillouin);
+
+                        case 2
+                            %% Calculate the FOV for the RI measurements
+                            nrPix = size(BMresults.results.results.RISection, 1);
+                            res = 0.2530;
+                            pos.X_RI = ((1:nrPix) - nrPix/2) * res;
+                            pos.Y_RI = pos.X_RI;
+
+                            %% Plot Brillouin Shift
+                            names = {};
+                            try
+                                masks = BMresults.results.results.masks;
+                            catch
+                                masks = {};
+                            end
+
+                            plotData2D(parameters.path, BS_mean, pos, parameters.BM.shift.cax, '$\nu_\mathrm{B}$ [GHz]', ...
+                                [alignmentFilename '_shift'], 0, masks, names);
+                            plotData2D(parameters.path, BS_mean, pos, parameters.BM.shift.cax, '$\nu_\mathrm{B}$ [GHz]', ...
+                                [alignmentFilename '_shift_outline'], 1, masks, names);
+
+                            %% Plot Brillouin intensity
+                            plotData2D(parameters.path, BI_mean, pos, parameters.BM.intensity.cax, '$I$ [a.u.]', ...
+                                [alignmentFilename '_int'], 0, masks, names);
+
+                            %% Plot longitudinal modulus
+                            plotData2D(parameters.path, M_mean, pos, parameters.Modulus.M.cax, ...
+                                '$M$ [GPa]', [alignmentFilename '_modulus'], 0, masks, names);
+                    end
                 catch
                 end
             end
@@ -109,12 +153,34 @@ function plotBrillouinModulus(parameters)
     catch
     end
     
-    function plotData(plotPath, data, pos, cax, colorbarTitle, filename, showOutline, masks, names)
-        
+    function plotData1D(plotPath, data, pos, cax, ylabelString, filename, Brillouin)
         
         %% plot results
         figure;
-        imagesc(pos.X_zm(1,:), pos.Y_zm(:,1), data, 'AlphaData', ~isnan(data));
+        d = squeeze(data);
+        p = squeeze(pos.(Brillouin.nsdims{1}));
+        plot(p, d, 'marker', 'x');
+        axis('normal');
+        colorbar('off');
+        xlim([min(p(:)), max(p(:))]);
+        ylim(cax);
+        xlabel(Brillouin.nsdimslabel{1}, 'interpreter', 'latex');
+        ylabel(ylabelString, 'interpreter', 'latex');
+        
+        layout = struct( ...
+            'figpos', [1 1 10 6], ...
+            'axepos', [0.15 0.17 0.8 0.74], ...
+            'colpos', [0.82 0.17 0.059 0.74] ...
+        );
+        prepare_fig([plotPath filesep 'Plots' filesep 'WithAxis' filesep filename], ...
+            'output', {'png', 'tikz'}, 'style', 'article', 'command', {'close'}, 'layout', layout);
+    end
+    
+    function plotData2D(plotPath, data, pos, cax, colorbarTitle, filename, showOutline, masks, names)
+        
+        %% plot results
+        figure;
+        imagesc(pos.X(1,:), pos.Y(:,1), data, 'AlphaData', ~isnan(data));
         hold on;
         if showOutline
             for mm = 1:length(names)
@@ -127,11 +193,11 @@ function plotBrillouinModulus(parameters)
                 );
                 outline = bwperim(masks.(field).mask);
 
-                imagesc(pos.X_zm(1,:), pos.Y_zm(:,1), colorMask, 'AlphaData', masks.(field).transparency*double(outline));
+                imagesc(pos.X(1,:), pos.Y(:,1), colorMask, 'AlphaData', masks.(field).transparency*double(outline));
             end
         end
         axis equal;
-        axis([min(pos.X_zm(:)), max(pos.X_zm(:)), min(pos.Y_zm(:)), max(pos.Y_zm(:))]);
+        axis([min(pos.X(:)), max(pos.X(:)), min(pos.Y(:)), max(pos.Y(:))]);
         caxis(cax);
         cb = colorbar;
         title(cb, colorbarTitle, 'interpreter', 'latex');
@@ -153,7 +219,7 @@ function plotBrillouinModulus(parameters)
             'output', 'png', 'style', 'article', 'layout', layout);
         
         % Also export the plot with the ODT FOV limits
-        axis([min(pos.X_zm_RI(:)), max(pos.X_zm_RI(:)), min(pos.Y_zm_RI(:)), max(pos.Y_zm_RI(:))]);
+        axis([min(pos.X_RI(:)), max(pos.X_RI(:)), min(pos.Y_RI(:)), max(pos.Y_RI(:))]);
         layout = struct( ...
             'figpos', [1 1 8 6], ...
             'axepos', [0.10 0.17 0.7 0.74], ...
@@ -212,14 +278,14 @@ function plotBrillouinModulus(parameters)
         imwrite(RGB, [plotPath filesep 'Plots' filesep 'Bare' filesep filename '_bare.png'], 'BitDepth', 8, 'Alpha', transparent);
         
         %% Calculate an image with the same FOV as the ODT result
-        [X, Y] = meshgrid(pos.X_zm(1,:), pos.Y_zm(:,1));
-        xmin = min(pos.X_zm_RI);
-        xmax = max(pos.X_zm_RI);
-        nrPosX = round((xmax - xmin)/abs(pos.X_zm(1,1) - pos.X_zm(1,2)));
+        [X, Y] = meshgrid(pos.X(1,:), pos.Y(:,1));
+        xmin = min(pos.X_RI);
+        xmax = max(pos.X_RI);
+        nrPosX = round((xmax - xmin)/abs(pos.X(1,1) - pos.X(1,2)));
         x_new = linspace(xmin, xmax, nrPosX);
-        ymin = min(pos.X_zm_RI);
-        ymax = max(pos.X_zm_RI);
-        nrPosY = round((ymax - ymin)/abs(pos.Y_zm(1,1) - pos.Y_zm(2,1)));
+        ymin = min(pos.X_RI);
+        ymax = max(pos.X_RI);
+        nrPosY = round((ymax - ymin)/abs(pos.Y(1,1) - pos.Y(2,1)));
         y_new = linspace(xmin, xmax, nrPosY);
         [X_RI, Y_RI] = meshgrid(x_new, y_new);
         
