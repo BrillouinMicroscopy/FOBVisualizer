@@ -44,13 +44,31 @@ function plotRefractiveIndex(parameters)
                     
                     pos.Z_zm = BMresults.results.parameters.positions.Z;
                     pos.Z_zm = squeeze(pos.Z_zm);
-                    pos.Z_zm = pos.Z_zm + alignment.Alignment.dz;
                     
-                    % Calculate the correct z-plane for ODT
-                    indZ = size(ODTResults.Reconimg, 3)/2 + round(pos.Z_zm(1,1) / ODTResults.res4);
-
+                    %% Determine the z-position at which to export
+                    if ~isfield(parameters.ODT.RI, 'zReference')
+                        parameters.ODT.RI.zReference = 'Brillouin';
+                    end
+                    if ~isfield(parameters.ODT.RI, 'z')
+                        parameters.ODT.RI.z = 0;
+                    end
+                    
+                    switch lower(parameters.ODT.RI.zReference)
+                        case 'odt'
+                            z = parameters.ODT.RI.z;
+                        case 'dish'
+                            z = alignment.Alignment.z0 + parameters.ODT.RI.z;
+                        otherwise % Default is 'brillouin'
+                            pos.Z_zm = pos.Z_zm + alignment.Alignment.dz + parameters.ODT.RI.z;
+                            z = pos.Z_zm(1,1);
+                    end
+                    
+                    %% Calculate the correct z-plane for ODT
+                    indZ = size(ODTResults.Reconimg, 3)/2 - round(z / ODTResults.res4);
+                    
                     RI = conv2(squeeze(mean(ODTResults.Reconimg(:, :, (0:round(BMZres/ODTResults.res4)) + indZ), 3)), fspecial('disk', 0.7), 'same');
-
+                    
+                    %%
                     nrPix = size(RI, 1);
                     res = 0.2530;
                     pos.x = ((1:nrPix)-nrPix/2)*res;
