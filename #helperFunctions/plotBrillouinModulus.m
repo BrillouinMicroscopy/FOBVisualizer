@@ -101,20 +101,22 @@ function plotBrillouinModulus(parameters)
                     Brillouin.nsdimslabel = nsdimslabel;
                     Brillouin.sdims = sdims;
                     
+                    z0 = alignment.Alignment.z0;
+                    
                     switch (Brillouin.dimension)
                         case 0
                         case 1
                             %% Plot Brillouin shift
                             plotData1D(parameters.path, BS_mean, pos, parameters.BM.shift.cax, '$\nu_\mathrm{B}$ [GHz]', ...
-                                [alignmentFilename '_shift'], Brillouin);
+                                [alignmentFilename '_shift'], Brillouin, z0);
 
                             %% Plot Brillouin intensity
                             plotData1D(parameters.path, BI_mean, pos, parameters.BM.intensity.cax, '$I$ [a.u.]', ...
-                                [alignmentFilename '_int'], Brillouin);
+                                [alignmentFilename '_int'], Brillouin, z0);
 
                             %% Plot longitudinal modulus
                             plotData1D(parameters.path, M_mean, pos, parameters.Modulus.M.cax, ...
-                                '$M$ [GPa]', [alignmentFilename '_modulus'], Brillouin);
+                                '$M$ [GPa]', [alignmentFilename '_modulus'], Brillouin, z0);
 
                         case 2
                             %% Calculate the FOV for the RI measurements
@@ -153,7 +155,7 @@ function plotBrillouinModulus(parameters)
     catch
     end
     
-    function plotData1D(plotPath, data, pos, cax, ylabelString, filename, Brillouin)
+    function plotData1D(plotPath, data, pos, cax, ylabelString, filename, Brillouin, z0)
         
         %% plot results
         figure;
@@ -166,6 +168,12 @@ function plotBrillouinModulus(parameters)
         ylim(cax);
         xlabel(Brillouin.nsdimslabel{1}, 'interpreter', 'latex');
         ylabel(ylabelString, 'interpreter', 'latex');
+        if strcmp(Brillouin.nsdims{1}, 'Z') && nargin == 8
+            hold('on');
+            plot([z0, z0], [min(cax), max(cax)], 'Linewidth', 1.5, 'color', [0.4660, 0.6740, 0.1880]);
+%             patch([1 4 4 1] + z0, [min(cax) min(cax) max(cax) max(cax)], [255 105 65]/255, 'FaceAlpha', .1);
+            hold('off');
+        end
         
         layout = struct( ...
             'figpos', [1 1 10 6], ...
