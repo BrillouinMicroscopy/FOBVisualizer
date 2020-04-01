@@ -120,7 +120,11 @@ function plotBrillouinModulus(parameters)
 
                         case 2
                             %% Calculate the FOV for the RI measurements
-                            nrPix = size(BMresults.results.results.RISection, 1);
+                            if isfield(BMresults.results.results, 'RISection')
+                                nrPix = size(BMresults.results.results.RISection, 1);
+                            else
+                                nrPix = 342; %% Should be extracted correctly without hardcoding
+                            end
                             res = 0.2530;
                             pos.X_RI = ((1:nrPix) - nrPix/2) * res;
                             pos.Y_RI = pos.X_RI;
