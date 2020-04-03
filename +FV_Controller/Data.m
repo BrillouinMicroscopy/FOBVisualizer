@@ -63,21 +63,27 @@ function openFile(model, filePath)
         Brillouin = model.Brillouin;
         Brillouin.repetitions = model.file.getRepetitions('Brillouin');
         Brillouin.repetition.index = 1;
-        Brillouin.repetition.name = Brillouin.repetitions{1};
+        if ~isempty(Brillouin.repetitions)
+            Brillouin.repetition.name = Brillouin.repetitions{1};
+        end
         model.Brillouin = Brillouin;
         
         % Fluorescence
         Fluorescence = model.Fluorescence;
         Fluorescence.repetitions = model.file.getRepetitions('Fluorescence');
         Fluorescence.repetition.index = 1;
-        Fluorescence.repetition.name = Fluorescence.repetitions{1};
+        if ~isempty(Fluorescence.repetitions)
+            Fluorescence.repetition.name = Fluorescence.repetitions{1};
+        end
         model.Fluorescence = Fluorescence;
         
         % ODT
         ODT = model.ODT;
         ODT.repetitions = model.file.getRepetitions('ODT');
         ODT.repetition.index = 1;
-        ODT.repetition.name = ODT.repetitions{1};
+        if ~isempty(ODT.repetitions)
+            ODT.repetition.name = ODT.repetitions{1};
+        end
         model.ODT = ODT;
         
         model.controllers.Brillouin.loadRepetition();
