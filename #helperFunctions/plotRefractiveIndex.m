@@ -66,7 +66,9 @@ function plotRefractiveIndex(parameters)
                     %% Calculate the correct z-plane for ODT
                     indZ = size(ODTResults.Reconimg, 3)/2 - round(z / ODTResults.res4);
                     
-                    RI = conv2(squeeze(mean(ODTResults.Reconimg(:, :, (0:round(BMZres/ODTResults.res4)) + indZ), 3)), fspecial('disk', 0.7), 'same');
+                    %% Bring the ODT measurement to the Brillouin resolution
+                    RI_averaged = mean(ODTResults.Reconimg(:, :, (0:round(BMZres/ODTResults.res4)) + indZ - round(BMZres/ODTResults.res4)/2), 3);
+                    RI = conv2(squeeze(RI_averaged), fspecial('disk', 0.7), 'same');
                     
                     %%
                     nrPix = size(RI, 1);
