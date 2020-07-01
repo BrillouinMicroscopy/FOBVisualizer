@@ -148,12 +148,13 @@ function loadAlignmentData(model)
         % Migrate if that fails
         catch
             density = modulus;
+            modulus = struct();
             if isfield(density, 'M')
-                modulus = struct( ...
-                    'M', density.M, ...
-                    'M_woRI', density.M_woRI ...
-                );
+                modulus.M = density.M;
                 density = rmfield(density, 'M');
+            end
+            if isfield(density, 'M_woRI')
+                modulus.M_woRI = density.M_woRI;
                 density = rmfield(density, 'M_woRI');
             end
         end
