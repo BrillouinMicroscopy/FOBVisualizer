@@ -63,6 +63,13 @@ function plotBrillouinModulus(parameters)
                     M(validityLevel > parameters.Modulus.validity) = NaN;
 
                     M_mean = nanmean(M, 4);
+                    
+                    % filter invalid values
+                    Rho = 1e-3*alignment.density.rho;
+                    Rho(~validity) = NaN;
+                    Rho(validityLevel > parameters.Modulus.validity) = NaN;
+
+                    Rho_mean = nanmean(Rho, 4);
 
                     %% Calculate zero mean positions
                     dims = {'X', 'Y', 'Z'};
