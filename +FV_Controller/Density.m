@@ -61,7 +61,7 @@ function calculateDensity(model)
             %% Apply density masks
             masks = model.density.masks;
             masksFields = fields(masks);
-            m_sum = zeros(size(density.rho,1), size(density.rho,2));
+            m_sum = zeros(size(rho,1), size(rho,2));
             for jj = 1:length(masksFields)
                 mask = masks.(masksFields{jj});
                 if ~mask.active
