@@ -38,9 +38,12 @@ for jj = 1:length(filelist)
                     %% align ODT and BM
                     if parameters.Alignment.do
                         controllers.data.openAlignment();
-                        model.controllers.Alignment.findz0();
-                        model.controllers.Alignment.start();
-                        model.controllers.Alignment.save();
+                        try
+                            model.controllers.Alignment.findz0();
+                            model.controllers.Alignment.start();
+                            model.controllers.Alignment.save();
+                        catch
+                        end
                         model.controllers.Alignment.close();
                         drawnow;
                     end
