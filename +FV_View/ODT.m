@@ -151,12 +151,14 @@ function onAlignment(view, model)
         if ishandle(view.ODT.positionPlot)
             delete(view.ODT.positionPlot)
         end
-        if length(model.Alignment.position.x) == 1
-            view.ODT.positionPlot = plot(ax, model.Alignment.position.x + model.Alignment.dx, model.Alignment.position.y + model.Alignment.dy, ...
-                'color', 'red', 'linewidth', 1.5, 'marker', 'o');
-        else
-            view.ODT.positionPlot = plot(ax, model.Alignment.position.x + model.Alignment.dx, model.Alignment.position.y + model.Alignment.dy, ...
-                'color', 'red', 'linewidth', 1.5);
+        view.ODT.positionPlot = plot(ax, ...
+            model.Alignment.position.x + model.Alignment.dx, ...
+            model.Alignment.position.y + model.Alignment.dy, ...
+            'color', 'red', 'linewidth', 1.5);
+        % If there is only a single point in x and y we use a visible
+        % marker
+        if length(model.Alignment.position.x) == 1 && length(model.Alignment.position.y) == 1
+            view.ODT.positionPlot.Marker = 'o';
         end
     end
 end
