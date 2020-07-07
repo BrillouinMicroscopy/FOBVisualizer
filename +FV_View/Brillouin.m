@@ -54,10 +54,10 @@ function initView(view, model)
     onFileChange(view, model)
 end
 
-function onFileChange(view, model)
+function onFileChange(FOB_view, model)
     Brillouin = model.Brillouin;
     Alignment = model.Alignment;
-    handles = view.Brillouin;
+    handles = FOB_view.Brillouin;
     reps = Brillouin.repetitions;
     if (isempty(reps))
         set(handles.repetitionCount, 'Text', num2str(0));
@@ -71,39 +71,41 @@ function onFileChange(view, model)
     if ~isempty(Brillouin.repetitions)
         try
             ax = handles.axesImage;
-            
-            BS = nanmean(Brillouin.shift, 4);
             positions = Brillouin.positions;
             
-            if ishandle(view.Brillouin.plot)
-                delete(view.Brillouin.plot)
+            for jj = 1:length(FOB_view.Brillouin.plot)
+                if ishandle(FOB_view.Brillouin.plot(jj))
+                    delete(FOB_view.Brillouin.plot(jj))
+                end
             end
+            BS = nanmean(Brillouin.shift, 4);
+            d = squeeze(BS);
             switch (Brillouin.dimension)
                 case 0
                 case 1
                     %% one dimensional case
-                    d = squeeze(BS);
                     p = squeeze(positions.(Brillouin.nsdims{1})) + Alignment.(['d' Brillouin.nsdims{1}]);
-                    view.Brillouin.plot = plot(ax, p, d, 'marker', 'x');
+                    FOB_view.Brillouin.plot = plot(ax, p, d, 'marker', 'x');
                     axis(ax, 'normal');
                     colorbar(ax, 'off');
                     xlim(ax, [min(p(:)), max(p(:))]);
                     ylim(ax, [min(d(:)), max(d(:))]);
                     xlabel(ax, ['{\it ' Brillouin.nsdims{1} '} [µm]'], 'interpreter', 'tex');
                     ylabel(ax, '\nu_{B} [GHz]', 'interpreter', 'tex');
+                    zlabel(ax, '');
                     if strcmp(Brillouin.nsdims{1}, 'z')
                         hold(ax, 'on');
                         plot(ax, [Alignment.z0, Alignment.z0], [min(d(:)), max(d(:))], 'Linewidth', 1.5, 'color', [0.4660, 0.6740, 0.1880]);
                         hold(ax, 'off');
                     end
+                    view(ax, 2);
                 case 2
                     %% two dimensional case
-                    d = squeeze(BS);
                     pos.x = squeeze(positions.x) + Alignment.dx;
                     pos.y = squeeze(positions.y) + Alignment.dy;
                     pos.z = squeeze(positions.z) + Alignment.dz;
                     
-                    view.Brillouin.plot = imagesc(ax, pos.(Brillouin.nsdims{2})(1,:), pos.(Brillouin.nsdims{1})(:,1), d);
+                    FOB_view.Brillouin.plot = imagesc(ax, pos.(Brillouin.nsdims{2})(1,:), pos.(Brillouin.nsdims{1})(:,1), d);
                     axis(ax, 'equal');
                     xlabel(ax, ['{\it ' Brillouin.nsdims{2} '} [µm]'], 'interpreter', 'tex');
                     ylabel(ax, ['{\it ' Brillouin.nsdims{1} '} [µm]'], 'interpreter', 'tex');
@@ -111,33 +113,63 @@ function onFileChange(view, model)
                     cb = colorbar(ax);
                     ylabel(cb, '\nu_{B} [GHz]', 'interpreter', 'tex', 'FontSize', 10);
                     set(ax, 'yDir', 'normal');
+                    view(ax, 2);
                 case 3
+                    %% three dimensional case
+                    pos.x = squeeze(positions.x) + Alignment.dx;
+                    pos.y = squeeze(positions.y) + Alignment.dy;
+                    pos.z = squeeze(positions.z) + Alignment.dz;
+                    
+                    if ndims(pos.x) ~= ndims(d) || sum(size(pos.x) ~= size(d)) > 0
+                        return;
+                    end
+                    FOB_view.Brillouin.plot = NaN(size(d, 3), 1);
+                    for jj = 1:size(d, 3)
+                        FOB_view.Brillouin.plot(jj) = surf(ax, pos.x(:,:,jj), pos.y(:,:,jj), pos.z(:,:,jj), d(:,:,jj));
+                        hold(ax, 'on');
+                    end
+                    cb = colorbar(ax);
+                    ylabel(cb, '\nu_{B} [GHz]', 'interpreter', 'tex', 'FontSize', 10);
+                    set(ax, 'yDir', 'normal');
+                    shading(ax, 'flat');
+                    axis(ax, 'equal');
+                    xlabel(ax, ['{\it ' Brillouin.nsdims{2} '} [µm]'], 'interpreter', 'tex');
+                    ylabel(ax, ['{\it ' Brillouin.nsdims{1} '} [µm]'], 'interpreter', 'tex');
+                    zlabel(ax, ['{\it ' Brillouin.nsdims{3} '} [µm]'], 'interpreter', 'tex');
+                    xlim(ax, [min(pos.x(:)), max(pos.x(:))]);
+                    ylim(ax, [min(pos.y(:)), max(pos.y(:))]);
+                    zlim(ax, [min(pos.z(:)), max(pos.z(:))]);
             end
             set(handles.date, 'Text', Brillouin.date);
             %% Update field of view
-            onFOVChange(view, model);
+            onFOVChange(FOB_view, model);
         catch
-            if ishandle(view.Brillouin.plot)
-                delete(view.Brillouin.plot)
+            for jj = 1:length(FOB_view.Brillouin.plot)
+                if ishandle(FOB_view.Brillouin.plot(jj))
+                    delete(FOB_view.Brillouin.plot(jj))
+                end
             end
             set(handles.date, 'Text', '');
         end
     else
-        if ishandle(view.Brillouin.plot)
-            delete(view.Brillouin.plot)
+        for jj = 1:length(FOB_view.Brillouin.plot)
+            if ishandle(FOB_view.Brillouin.plot(jj))
+                delete(FOB_view.Brillouin.plot(jj))
+            end
         end
         set(handles.date, 'Text', '');
     end
 end
 
 function onFOVChange(view, model)
-    if (model.Brillouin.dimension == 2)
-        ax = view.Brillouin.axesImage;
-        if model.parameters.xlim(1) < model.parameters.xlim(2)
-            xlim(ax, [model.parameters.xlim]);
-        end
-        if model.parameters.ylim(1) < model.parameters.ylim(2)
-            ylim(ax, [model.parameters.ylim]);
-        end
+    if model.Brillouin.dimension ~= 2
+        return;
+    end
+    ax = view.Brillouin.axesImage;
+    if model.parameters.xlim(1) < model.parameters.xlim(2)
+        xlim(ax, [model.parameters.xlim]);
+    end
+    if model.parameters.ylim(1) < model.parameters.ylim(2)
+        ylim(ax, [model.parameters.ylim]);
     end
 end

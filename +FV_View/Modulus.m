@@ -39,26 +39,28 @@ function initView(view, model)
     onFileChange(view, model)
 end
 
-function onFileChange(view, model)
+function onFileChange(FOB_view, model)
     Brillouin =  model.Brillouin;
     Alignment =  model.Alignment;
     
     if ~(isempty(Brillouin.repetitions) || isempty(model.ODT.repetitions))
         try
-            ax = view.Modulus.axesImage;
+            ax = FOB_view.Modulus.axesImage;
             positions = Brillouin.positions;            
             
-            if ishandle(view.Modulus.plot)
-                delete(view.Modulus.plot)
+            for jj = 1:length(FOB_view.Modulus.plot)
+                if ishandle(FOB_view.Modulus.plot(jj))
+                    delete(FOB_view.Modulus.plot(jj))
+                end
             end
+            M = nanmean(model.modulus.M, 4);
+            d = 1e-9*squeeze(M);
             switch (Brillouin.dimension)
                 case 0
                 case 1
                     %% one dimensional case
-                    M = nanmean(model.modulus.M, 4);
-                    d = 1e-9*squeeze(M);
                     p = squeeze(positions.(Brillouin.nsdims{1})) + Alignment.(['d' Brillouin.nsdims{1}]);
-                    view.Modulus.plot = plot(ax, p, d, 'marker', 'x');
+                    FOB_view.Modulus.plot = plot(ax, p, d, 'marker', 'x');
                     axis(ax, 'normal');
                     colorbar(ax, 'off');
                     xlim(ax, [min(p(:)), max(p(:))]);
@@ -70,15 +72,14 @@ function onFileChange(view, model)
                         plot(ax, [Alignment.z0, Alignment.z0], [min(d(:)), max(d(:))], 'Linewidth', 1.5, 'color', [0.4660, 0.6740, 0.1880]);
                         hold(ax, 'off');
                     end
+                    view(ax, 2);
                 case 2
                     %% two dimensional case
-                    M = nanmean(model.modulus.M, 4);
-                    d = 1e-9*squeeze(M);
                     pos.x = squeeze(positions.x) + Alignment.dx;
                     pos.y = squeeze(positions.y) + Alignment.dy;
                     pos.z = squeeze(positions.z) + Alignment.dz;
                     
-                    view.Modulus.plot = imagesc(ax, pos.(Brillouin.nsdims{2})(1,:), pos.(Brillouin.nsdims{1})(:,1), d);
+                    FOB_view.Modulus.plot = imagesc(ax, pos.(Brillouin.nsdims{2})(1,:), pos.(Brillouin.nsdims{1})(:,1), d);
                     axis(ax, 'equal');
                     xlabel(ax, ['{\it ' Brillouin.nsdims{2} '} [µm]'], 'interpreter', 'tex');
                     ylabel(ax, ['{\it ' Brillouin.nsdims{1} '} [µm]'], 'interpreter', 'tex');
@@ -86,19 +87,48 @@ function onFileChange(view, model)
                     cb = colorbar(ax);
                     ylabel(cb, 'M'' [GPa]', 'interpreter', 'tex', 'FontSize', 10);
                     set(ax, 'yDir', 'normal');
+                    view(ax, 2);
                 case 3
+                    %% three dimensional case
+                    pos.x = squeeze(positions.x) + Alignment.dx;
+                    pos.y = squeeze(positions.y) + Alignment.dy;
+                    pos.z = squeeze(positions.z) + Alignment.dz;
+                    
+                    if ndims(pos.x) ~= ndims(d) || sum(size(pos.x) ~= size(d)) > 0
+                        return;
+                    end
+                    FOB_view.Modulus.plot = NaN(size(d, 3), 1);
+                    for jj = 1:size(d, 3)
+                        FOB_view.Modulus.plot(jj) = surf(ax, pos.x(:,:,jj), pos.y(:,:,jj), pos.z(:,:,jj), d(:,:,jj));
+                        hold(ax, 'on');
+                    end
+                    cb = colorbar(ax);
+                    ylabel(cb, 'M'' [GPa]', 'interpreter', 'tex', 'FontSize', 10);
+                    set(ax, 'yDir', 'normal');
+                    shading(ax, 'flat');
+                    axis(ax, 'equal');
+                    xlabel(ax, ['{\it ' Brillouin.nsdims{2} '} [µm]'], 'interpreter', 'tex');
+                    ylabel(ax, ['{\it ' Brillouin.nsdims{1} '} [µm]'], 'interpreter', 'tex');
+                    zlabel(ax, ['{\it ' Brillouin.nsdims{3} '} [µm]'], 'interpreter', 'tex');
+                    xlim(ax, [min(pos.x(:)), max(pos.x(:))]);
+                    ylim(ax, [min(pos.y(:)), max(pos.y(:))]);
+                    zlim(ax, [min(pos.z(:)), max(pos.z(:))]);
             end
             
             %% Update field of view
-            onFOVChange(view, model);
+            onFOVChange(FOB_view, model);
         catch
-            if ishandle(view.Modulus.plot)
-                delete(view.Modulus.plot)
+            for jj = 1:length(FOB_view.Modulus.plot)
+                if ishandle(FOB_view.Modulus.plot(jj))
+                    delete(FOB_view.Modulus.plot(jj))
+                end
             end
         end
     else
-        if ishandle(view.Modulus.plot)
-            delete(view.Modulus.plot)
+        for jj = 1:length(FOB_view.Modulus.plot)
+            if ishandle(FOB_view.Modulus.plot(jj))
+                delete(FOB_view.Modulus.plot(jj))
+            end
         end
     end
 end
