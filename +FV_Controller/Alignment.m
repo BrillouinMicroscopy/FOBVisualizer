@@ -85,18 +85,28 @@ function start(~, ~, model, view)
                     
                     BS(BS_int < 15) = NaN;
                     
+                    %% We add a data point at the far end to force the fit to zero
+                    z = squeeze(pos.z);
+                    BS_int_fit = BS_int;
+                    z(end+1) = -50;
+                    BS_int_fit(end+1) = 0;
+                    
+                    % sort the values by position
+                    [z, ind] = sort(z);
+                    BS_int_fit = BS_int_fit(ind);
+                    
                     %% Fit function to Brillouin peak intensity
-                    a = -1 * max(BS_int, [], 'all');
+                    a = -1 * max(BS_int_fit, [], 'all');
                     b = -0.5;
                     c = 0;
-                    d = max(BS_int, [], 'all');
+                    d = max(BS_int_fit, [], 'all');
                     ft = fittype('a/(1+exp(-b*(x-c)))+d', 'independent', 'x', 'dependent', 'y');
                     opts = fitoptions('Method', 'NonlinearLeastSquares');
                     opts.Display = 'Off';
                     opts.StartPoint = [a b c d];
                     opts.Lower = [a -Inf -Inf 0.5*d];
                     opts.Upper = [0 Inf Inf 1.5*d];
-                    [fitresult, ~] = fit(pos.z(~isnan(BS_int)), BS_int(~isnan(BS_int)), ft, opts);
+                    [fitresult, ~] = fit(z(~isnan(BS_int_fit)), BS_int_fit(~isnan(BS_int_fit)), ft, opts);
                     fitted_curve = fitresult.a ./ (1 + exp(-fitresult.b * (pos.z - fitresult.c) )) + fitresult.d;
                     
                     %% Find the position of the glass interface
