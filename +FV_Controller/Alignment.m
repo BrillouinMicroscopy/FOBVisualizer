@@ -56,7 +56,7 @@ function start(~, ~, model, view)
     Brillouin = model.Brillouin;
     ODT = model.ODT;
     
-    BMZres = 2;     % [µm]  resolution of the BM measurement in z-direction
+    BMZres = 2;     % [ï¿½m]  resolution of the BM measurement in z-direction
     
     if ~isempty(Brillouin.repetitions) && ~isempty(ODT.repetitions)
         try
@@ -99,10 +99,13 @@ function start(~, ~, model, view)
                     [fitresult, ~] = fit(pos.z(~isnan(BS_int)), BS_int(~isnan(BS_int)), ft, opts);
                     fitted_curve = fitresult.a ./ (1 + exp(-fitresult.b * (pos.z - fitresult.c) )) + fitresult.d;
                     
-                    [~, ind] = min(abs(fitted_curve - fitresult.d/2));
+                    %% Find the position of the glass interface
+%                     [~, ind] = min(abs(fitted_curve - fitresult.d/2));
+%                     z0_Brillouin = pos.z(ind);
+                    z0_Brillouin = fitresult.c;
                     
                     %% Save alignment
-                    dz = model.Alignment.z0 - pos.z(ind);
+                    dz = model.Alignment.z0 - z0_Brillouin;
                     set(view.Alignment.dz, 'String', dz);
                     
                     %% Plot results
@@ -114,7 +117,7 @@ function start(~, ~, model, view)
                     plot(ax, z, BS_int, 'marker', 'x', 'linestyle', ':', 'color', [0, 0.4470, 0.7410]);
                     hold(ax, 'on');
                     plot(ax, z, fitted_curve, 'linestyle', '-', 'color', [0.8500, 0.3250, 0.0980]);
-                    plot(ax, [pos.z(ind), pos.z(ind)] + dz, [0 y_max], 'Linewidth', 1.5, 'linestyle', '-', 'color', [0.4660, 0.6740, 0.1880]);
+                    plot(ax, [z0_Brillouin, z0_Brillouin] + dz, [0 y_max], 'Linewidth', 1.5, 'linestyle', '-', 'color', [0.4660, 0.6740, 0.1880]);
                     ylim(ax, [0 y_max]);
                     xlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
                     ylabel(ax, '$I$ [a.u.]', 'interpreter', 'latex');
