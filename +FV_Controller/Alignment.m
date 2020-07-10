@@ -20,7 +20,7 @@ end
 
 function findz0(~, ~, model, view)
     %% Extract RI of the medium
-    RI_medium = nanmedian(model.ODT.data.Reconimg(:));
+    RI_medium = 1.002*nanmedian(model.ODT.data.Reconimg(:));
     
     %% Calculate area of pixels with a RI larger than the medium, i.e. cells
     area = NaN(size(model.ODT.data.Reconimg, 3), 1);
