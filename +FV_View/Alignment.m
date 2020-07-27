@@ -110,6 +110,30 @@ function handles = initGUI(parent, model)
             handles.dy = dy;
             handles.dz = dz;
         case 3
+            ODT = subplot(1, 2, 1);
+            box(ODT, 'on');
+            ODT_pos = get(ODT, 'position');
+            ODT_pos(1) = 0.05;
+            ODT_pos(2) = 0.15;
+            ODT_pos(3) = 0.4;
+            set(ODT, 'position', ODT_pos);
+            
+            BS = subplot(1, 2, 2);
+            box(BS, 'on');
+            BS_pos = get(BS, 'position');
+            BS_pos(1) = 0.53;
+            BS_pos(2) = 0.15;
+            BS_pos(3) = 0.4;
+            set(BS, 'position', BS_pos);
+
+            uicontrol('Parent', parent, 'Style', 'text', 'String', 'dz [µm]:', 'Units', 'normalized',...
+                'Position', [0.505,0.015,0.07,0.05], 'FontSize', 11, 'HorizontalAlignment', 'left');
+            dz = uicontrol('Parent', parent, 'Style', 'edit', 'Units', 'normalized',...
+                'Position', [0.565,0.03,0.07,0.05], 'FontSize', 11, 'HorizontalAlignment', 'center');
+            
+            handles.ODT = ODT;
+            handles.BS = BS;
+            handles.dz = dz;
     end
 end
 

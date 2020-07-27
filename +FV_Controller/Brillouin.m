@@ -51,14 +51,16 @@ function loadRepetition(model, repetition)
             
             Brillouin.validityLevel = data.results.results.peaksBrillouin_dev./data.results.results.peaksBrillouin_int;
             
-            dimensions = size(nanmean(Brillouin.shift, 4));
+            % Get the dimensions of x, y and z
+            dimensions = size(Brillouin.shift, 1, 2, 3);
+            
             dimension = sum(dimensions > 1);
             Brillouin.dimension = dimension;
             
             %% find non-singular dimensions
             dims = {'y', 'x', 'z'};
-            nsdims = cell(dimension,1);
-            sdims = cell(dimension,1);
+            nsdims = cell(0);
+            sdims = cell(0);
             ind = 0;
             sind = 0;
             for jj = 1:length(dimensions)
@@ -94,25 +96,67 @@ function extractAlignment(model, Alignment)
         Alignment = model.Alignment;
     end
     Brillouin = model.Brillouin;
-    switch (Brillouin.dimension)
+    %% Extract limits of positions to show in ODT and Fluorescence
+    lims = struct();
+    for dim = 1:length(Brillouin.sdims)
+        lims.(Brillouin.sdims{dim}) = nanmean(Brillouin.positions.(Brillouin.sdims{dim}), 'all');
+    end
+    for dim = 1:length(Brillouin.nsdims)
+        lims.(Brillouin.nsdims{dim}) = [min(Brillouin.positions.(Brillouin.nsdims{dim}), [], 'all'), ...
+                                        max(Brillouin.positions.(Brillouin.nsdims{dim}), [], 'all')];
+    end
+    %% Construct lines to indicate the positions
+    Alignment.position.x = [];
+    Alignment.position.y = [];
+    % number of edges we have to draw is 2^(dimension - 1) * dimension, but
+    % we only consider the projection in the x-y-plane.
+    xydim = sum(size(Brillouin.shift, 1, 2) > 1);
+    switch 2^(xydim - 1) * xydim
+        % Show a single point
         case 0
+            for jj = 1:length(lims.x)
+                for kk = 1:length(lims.y)
+                    Alignment.position.x(end+1) = lims.x(jj);
+                    Alignment.position.y(end+1) = lims.y(kk);
+                end
+            end
+        % Show a line
         case 1
-            %% Extract positions to show in ODT and Fluorescence
-            xPos = nanmean(Brillouin.positions.(Brillouin.sdims{2})(:));
-            Alignment.position.x = xPos;
-            yPos = nanmean(Brillouin.positions.(Brillouin.sdims{1})(:));
-            Alignment.position.y = yPos;
-        case 2
-            %% Extract positions to show in ODT and Fluorescence
-            minX = min(Brillouin.positions.x(:));
-            maxX = max(Brillouin.positions.x(:));
-            xPos = [minX, maxX, maxX, minX, minX];
-            Alignment.position.x = xPos;
-            minY = min(Brillouin.positions.y(:));
-            maxY = max(Brillouin.positions.y(:));
-            yPos = [minY, minY, maxY, maxY, minY];
-            Alignment.position.y = yPos;
-        case 3
+            for jj = 1:length(lims.x)
+                for kk = 1:length(lims.y)
+                    Alignment.position.x(end+1) = lims.x(jj);
+                    Alignment.position.y(end+1) = lims.y(kk);
+
+                    if jj == kk
+                        Alignment.position.x(end+1) = lims.x(mod(jj + 1, 2) + 1);
+                        Alignment.position.y(end+1) = lims.y(kk);
+                    else
+                        Alignment.position.x(end+1) = lims.x(jj);
+                        Alignment.position.y(end+1) = lims.y(mod(kk + 1, 2) + 1);
+                    end
+                end
+            end
+        % Show a square
+        case 4
+            for jj = 1:length(lims.x)
+                for kk = 1:length(lims.y)
+                    Alignment.position.x(end+1) = lims.x(jj);
+                    Alignment.position.y(end+1) = lims.y(kk);
+
+                    if jj == kk
+                        Alignment.position.x(end+1) = lims.x(mod(jj, 2) + 1);
+                        Alignment.position.y(end+1) = lims.y(kk);
+                    else
+                        Alignment.position.x(end+1) = lims.x(jj);
+                        Alignment.position.y(end+1) = lims.y(mod(kk, 2) + 1);
+                    end
+                    Alignment.position.x(end+1) = NaN;
+                    Alignment.position.y(end+1) = NaN;
+                end
+            end
+        case 12
+            % We only consider the projection to the x-y-plane, so this
+            % case won't occur.
     end
     model.Alignment = Alignment;
 end
