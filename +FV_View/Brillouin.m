@@ -78,7 +78,10 @@ function onFileChange(FOB_view, model)
                     delete(FOB_view.Brillouin.plot(jj))
                 end
             end
-            BS = nanmean(Brillouin.shift, 4);
+            % Show the one-peak-fit only
+            peakNumber = 1;
+            BS = Brillouin.shift(:,:,:,:,peakNumber);
+            BS = nanmean(BS, 4);
             d = squeeze(BS);
             switch (Brillouin.dimension)
                 case 0

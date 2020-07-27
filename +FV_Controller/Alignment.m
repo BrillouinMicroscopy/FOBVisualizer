@@ -64,15 +64,18 @@ function start(~, ~, model, view)
             BS(~Brillouin.validity) = NaN;
             BS(Brillouin.validityLevel > 25) = NaN;
             
+            % Use the one-peak-fit
+            peakNumber = 1;
+            BS = BS(:,:,:,:,peakNumber);
             BS = nanmean(BS, 4);
+            BS = squeeze(BS);
+            
             positions = Brillouin.positions;
             
             switch (Brillouin.dimension)
                 case 0
                 case 1
                     %% one dimensional case
-                    BS = squeeze(BS);
-                    
                     BS_int = Brillouin.intensity;
                     BS_int(~Brillouin.validity) = NaN;
                     BS_int(Brillouin.validityLevel > 25) = NaN;
@@ -141,7 +144,6 @@ function start(~, ~, model, view)
                     
                 case 2
                     %% two dimensional case
-                    BS = squeeze(BS);
                     pos.x = squeeze(positions.x);
                     pos.y = squeeze(positions.y);
                     pos.z = squeeze(positions.z);
@@ -255,8 +257,6 @@ function start(~, ~, model, view)
                     
                 case 3
                     %% three dimensional case
-                    BS = squeeze(BS);
-                    
                     BS_int = Brillouin.intensity;
                     BS_int(~Brillouin.validity) = NaN;
                     BS_int(Brillouin.validityLevel > 25) = NaN;

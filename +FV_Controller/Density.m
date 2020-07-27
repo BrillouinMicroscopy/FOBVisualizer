@@ -128,8 +128,8 @@ function calculateDensity(model)
             
             rho = 1e3*rho;      % [kg/m^3]  density of the sample
             
-            rho = repmat(rho, 1, 1, 1, size(Brillouin.shift, 4));
-            RI = repmat(RI, 1, 1, 1, size(Brillouin.shift, 4));
+            rho = repmat(rho, 1, 1, 1, size(Brillouin.shift, 4), size(Brillouin.shift, 5));
+            RI = repmat(RI, 1, 1, 1, size(Brillouin.shift, 4), size(Brillouin.shift, 5));
 
             %% Save to structure
             density.RI = RI;

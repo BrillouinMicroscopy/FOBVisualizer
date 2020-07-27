@@ -106,7 +106,10 @@ function onFileChange(FOB_view, model)
                     delete(FOB_view.Density.plot(jj))
                 end
             end
-            rho = nanmean(model.density.rho, 4);
+            % Show the one-peak-fit only
+            peakNumber = 1;
+            rho = model.density.rho(:,:,:,:,peakNumber);
+            rho = nanmean(rho, 4);
             d = 1e-3*squeeze(rho);
             switch (Brillouin.dimension)
                 case 0

@@ -53,7 +53,10 @@ function onFileChange(FOB_view, model)
                     delete(FOB_view.Modulus.plot(jj))
                 end
             end
-            M = nanmean(model.modulus.M, 4);
+            % Show the one-peak-fit only
+            peakNumber = 1;
+            M = model.modulus.M(:,:,:,:,peakNumber);
+            M = nanmean(M, 4);
             d = 1e-9*squeeze(M);
             switch (Brillouin.dimension)
                 case 0
