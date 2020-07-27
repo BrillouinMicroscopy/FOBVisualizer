@@ -254,6 +254,75 @@ function start(~, ~, model, view)
                     set(view.Alignment.dz, 'String', dz);
                     
                 case 3
+                    %% three dimensional case
+                    BS = squeeze(BS);
+                    
+                    BS_int = Brillouin.intensity;
+                    BS_int(~Brillouin.validity) = NaN;
+                    BS_int(Brillouin.validityLevel > 25) = NaN;
+                    BS_int = nanmean(BS_int, 4);
+                    BS_int = nanmean(BS_int, 1);
+                    BS_int = nanmean(BS_int, 2);
+                    BS_int = squeeze(BS_int);
+                    
+                    pos.x = squeeze(positions.x);
+                    pos.y = squeeze(positions.y);
+                    pos.z = squeeze(positions.z);
+                    
+                    BS(BS_int < 15) = NaN;
+                    
+                    %% We add a data point at the far end to force the fit to zero
+                    z = squeeze(pos.z(1,1,:));
+                    z(end+1) = -50;
+                    BS_int(end+1) = 0;
+                    
+                    % sort the values by position
+                    [z, ind] = sort(z);
+                    BS_int = BS_int(ind);
+                    
+                    %% Fit function to Brillouin peak intensity
+                    a = -1 * max(BS_int, [], 'all');
+                    b = -0.5;
+                    [~, ind] = min(abs(BS_int - a/2));
+                    c = pos.z(ind);
+                    d = max(BS_int, [], 'all');
+                    
+                    ft = fittype('a/(1+exp(-b*(x-c)))+d', 'independent', 'x', 'dependent', 'y');
+                    opts = fitoptions('Method', 'NonlinearLeastSquares');
+                    opts.Display = 'Off';
+                    opts.StartPoint = [a b c d];
+                    opts.Lower = [a -Inf -Inf 0.5*d];
+                    opts.Upper = [0 Inf Inf 1.5*d];
+                    [fitresult, ~] = fit(z(~isnan(BS_int)), BS_int(~isnan(BS_int)), ft, opts);
+                    z_ext = min(z, [], 'all'):.5:(max(z, [], 'all') + 5);
+                    fitted_curve = fitresult.a ./ (1 + exp(-fitresult.b * (z_ext - fitresult.c) )) + fitresult.d;
+                    
+                    %% Find the position of the glass interface
+                    z0_Brillouin = fitresult.c;
+                    
+                    %% Save alignment
+                    dz = model.Alignment.z0 - z0_Brillouin;
+                    set(view.Alignment.dz, 'String', dz);
+                    
+                    %% Plot results
+                    z = squeeze(z + dz);
+                    y_max = 1.1 * max(BS_int, [], 'all');
+                    ax = view.Alignment.BS;
+                    hold(ax, 'off');
+                    yyaxis(ax, 'left');
+                    plot(ax, z, BS_int, 'marker', 'x', 'linestyle', ':', 'color', [0, 0.4470, 0.7410]);
+                    hold(ax, 'on');
+                    plot(ax, z_ext + dz, fitted_curve, 'linestyle', '-', 'color', [0.8500, 0.3250, 0.0980]);
+                    plot(ax, [z0_Brillouin, z0_Brillouin] + dz, [0 y_max], 'Linewidth', 1.5, 'linestyle', '-', 'color', [0.4660, 0.6740, 0.1880]);
+                    ylim(ax, [0 y_max]);
+                    xlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
+                    ylabel(ax, '$I$ [a.u.]', 'interpreter', 'latex');
+                    yyaxis(ax, 'right');
+                    hold(ax, 'off');
+                    pause(1);
+%                     plot(ax, z, BS, 'linestyle', '--', 'color', [0.9290, 0.6940, 0.1250]);
+%                     hold(ax, 'on');
+%                     ylabel(ax, '$\nu_\mathrm{B}$ [GHz]', 'interpreter', 'latex');
             end
         catch e
             disp(e);
