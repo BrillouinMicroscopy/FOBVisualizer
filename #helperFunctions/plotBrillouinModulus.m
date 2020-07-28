@@ -46,6 +46,11 @@ function plotBrillouinModulus(parameters)
                     BrillouinShift(validityLevel > parameters.BM.validity) = NaN;
 
                     % average results
+                    if size(BrillouinShift, 5) >= parameters.BM.peakNumber && isfield(parameters.BM, 'peakNumber')
+                        BrillouinShift = BrillouinShift(:,:,:,:,parameters.BM.peakNumber);
+                    else
+                        BrillouinShift = BrillouinShift(:,:,:,:,1);
+                    end
                     BS_mean = nanmean(BrillouinShift, 4);
                     
                     % filter invalid values
@@ -53,6 +58,11 @@ function plotBrillouinModulus(parameters)
                     BrillouinIntensity(validityLevel > parameters.BM.validity) = NaN;
 
                     % average results
+                    if size(BrillouinIntensity, 5) >= parameters.BM.peakNumber && isfield(parameters.BM, 'peakNumber')
+                        BrillouinIntensity = BrillouinIntensity(:,:,:,:,parameters.BM.peakNumber);
+                    else
+                        BrillouinIntensity = BrillouinIntensity(:,:,:,:,1);
+                    end
                     BI_mean = nanmean(BrillouinIntensity, 4);
                     BI_mean = BI_mean./max(BI_mean(:));
                     
@@ -62,6 +72,11 @@ function plotBrillouinModulus(parameters)
                     M(~validity) = NaN;
                     M(validityLevel > parameters.Modulus.validity) = NaN;
 
+                    if size(M, 5) >= parameters.Modulus.peakNumber && isfield(parameters.Modulus, 'peakNumber')
+                        M = M(:,:,:,:,parameters.Modulus.peakNumber);
+                    else
+                        M = M(:,:,:,:,1);
+                    end
                     M_mean = nanmean(M, 4);
                     
                     % filter invalid values
@@ -84,7 +99,7 @@ function plotBrillouinModulus(parameters)
                     pos.Z = pos.Z + alignment.Alignment.dz;
                     
                     %% Find the dimension of the measurement
-                    dimensions = size(BS_mean);
+                    dimensions = size(BS_mean, 1, 2, 3);
                     dimension = sum(dimensions > 1);
                     Brillouin.dimension = dimension;
                     
