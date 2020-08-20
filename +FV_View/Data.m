@@ -45,7 +45,7 @@ function onFileLoad(view, model)
     handles = view.data;
     
     if isa(model.file,'FV_Utils.HDF5Storage.h5bm') && isvalid(model.file)
-        set(handles.filename, 'Text', [model.filepath model.filename]);
+        set(handles.filename, 'Text', ['<Current Folder>' erase([model.filepath model.filename], pwd)]);
         set(handles.date, 'Text', model.file.date);
     else
         set(handles.filename, 'Text', '');
