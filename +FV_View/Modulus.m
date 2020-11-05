@@ -46,6 +46,7 @@ function onFileChange(FOB_view, model)
     if ~(isempty(Brillouin.repetitions) || isempty(model.ODT.repetitions))
         try
             ax = FOB_view.Modulus.axesImage;
+            colormap(ax, FV_Utils.Colormaps.viridis);
             positions = Brillouin.positions;            
             
             for jj = 1:length(FOB_view.Modulus.plot)
