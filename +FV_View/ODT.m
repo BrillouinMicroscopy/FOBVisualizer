@@ -45,6 +45,7 @@ function initGUI(model, view)
         'Value', model.ODT.zDepth, 'Enable', ~model.ODT.maxProj);
     
     axesImage = uiaxes(parent, 'Position', [30 350 390 300]);
+    colormap(axesImage, FV_Utils.Colormaps.inferno);
     axis(axesImage, 'equal');
     box(axesImage, 'on');
     
@@ -112,7 +113,7 @@ function onFileChange(view, model)
             axis(ax, 'equal');
             xlabel(ax, '{\it x} [µm]', 'interpreter', 'tex');
             ylabel(ax, '{\it y} [µm]', 'interpreter', 'tex');
-            colormap(ax, 'jet');
+            colormap(ax, FV_Utils.Colormaps.inferno);
             cb = colorbar(ax);
             ylabel(cb, '{\it n}', 'interpreter', 'tex', 'FontSize', 10);
             caxis(ax, [n_m-.005 n_s]);

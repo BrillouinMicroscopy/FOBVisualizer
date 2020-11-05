@@ -46,6 +46,7 @@ function handles = initGUI(parent, model)
         case 0
         case 1
             ODT = subplot(1, 2, 1);
+            colormap(ODT, FV_Utils.Colormaps.inferno);
             box(ODT, 'on');
             ODT_pos = get(ODT, 'position');
             ODT_pos(1) = 0.05;
@@ -73,6 +74,7 @@ function handles = initGUI(parent, model)
             handles.dz = dz;
         case 2
             ODT = subplot(2, 3, 1);
+            colormap(ODT, FV_Utils.Colormaps.inferno);
             box(ODT, 'on');
             BS = subplot(2, 3, 2);
             box(BS, 'on');
@@ -111,6 +113,7 @@ function handles = initGUI(parent, model)
             handles.dz = dz;
         case 3
             ODT = subplot(1, 2, 1);
+            colormap(ODT, FV_Utils.Colormaps.inferno);
             box(ODT, 'on');
             ODT_pos = get(ODT, 'position');
             ODT_pos(1) = 0.05;
@@ -175,6 +178,7 @@ function initView(view, model)
 
                             view.BS_plot = imagesc(ax, pos.(Brillouin.nsdims{2})(1,:), pos.(Brillouin.nsdims{1})(:,1), d);
                             axis(ax, 'equal');
+                            colormap(ax, FV_Utils.Colormaps.viridis);
                             xlabel(ax, ['$' Brillouin.nsdims{2} '$ [$\mu$m]'], 'interpreter', 'latex');
                             ylabel(ax, ['$' Brillouin.nsdims{1} '$ [$\mu$m]'], 'interpreter', 'latex');
                             xlim(ax, [min(pos.x, [], 'all'), max(pos.x, [], 'all')]);

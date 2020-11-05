@@ -190,7 +190,7 @@ function start(~, ~, model, view)
                     xlim(view.Alignment.ODT, [min(X_valid, [], 'all'), max(X_valid, [], 'all')]);
                     ylim(view.Alignment.ODT, [min(Y_valid, [], 'all'), max(Y_valid, [], 'all')]);
                     set(view.Alignment.ODT, 'YDir', 'normal');
-                    colormap(view.Alignment.ODT, 'jet');
+                    colormap(view.Alignment.ODT, FV_Utils.Colormaps.inferno);
                     xlabel(view.Alignment.ODT, ['$' Brillouin.nsdims{2} '$ [$\mu$m]'], 'interpreter', 'latex');
                     ylabel(view.Alignment.ODT, ['$' Brillouin.nsdims{1} '$ [$\mu$m]'], 'interpreter', 'latex');
                     cb = colorbar(view.Alignment.ODT);
@@ -218,6 +218,7 @@ function start(~, ~, model, view)
                         set(view.Alignment.ODT_plot, 'CData', testVol);
                         set(view.Alignment.coeff_plot, 'YData', corrMaxVal);
                         view.Alignment.map_plot = imagesc(view.Alignment.map, corrVal);
+                        colormap(view.Alignment.map, FV_Utils.Colormaps.viridis);
                         
                         drawnow;
                     end
