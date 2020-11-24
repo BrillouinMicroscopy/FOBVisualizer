@@ -84,6 +84,34 @@ function plotRefractiveIndex(parameters)
                 catch
                 end
             end
+            
+            % If there are no Brillouin measurements, just export the
+            % center RI plane
+            if length(BMrepetitions) < 1
+                %% Calculate the correct z-plane for ODT
+                indZ = size(ODTResults.Reconimg, 3)/2;
+
+                %% Bring the ODT measurement to the Brillouin resolution
+%                     RI_averaged = mean(ODTResults.Reconimg(:, :, (0:round(BMZres/ODTResults.res4)) + indZ - round(BMZres/ODTResults.res4)/2), 3);
+%                     RI = conv2(squeeze(RI_averaged), fspecial('disk', 0.7), 'same');
+
+                %% Use exact RI without averaging
+                RI = ODTResults.Reconimg(:, :, indZ);
+
+                %%
+                nrPix = size(RI, 1);
+                res = 0.2530;
+                pos.x = ((1:nrPix)-nrPix/2)*res;
+                pos.y = pos.x;
+                
+                alignmentFilename = parameters.filename;
+                if length(ODTrepetitions) > 1
+                    alignmentFilename = [alignmentFilename '_ODTrep' num2str(ODTrepetitions{jj})]; %#ok<AGROW>
+                end
+
+                %% Plot refractive index
+                plotData(parameters.path, RI, pos, parameters.ODT.RI.cax, '$n$', alignmentFilename);
+            end
         end
         h5bmclose(file);
     catch
