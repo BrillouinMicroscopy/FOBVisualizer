@@ -88,6 +88,7 @@ function openFile(model, filePath)
         
         model.controllers.Brillouin.loadRepetition();
         model.controllers.ODT.loadRepetition();
+        model.controllers.fluorescence.loadRepetition();
         loadAlignmentData(model);
     end
 end

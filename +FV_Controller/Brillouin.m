@@ -36,6 +36,7 @@ function loadRepetition(model, repetition)
             data = load(filepath, 'results');
             
             Brillouin.date = model.file.readPayloadData('Brillouin', Brillouin.repetition.name, 'date', 0);
+                
             
             if isfield(data.results.results, 'BrillouinShift_frequency_normalized')
                 Brillouin.shift = data.results.results.BrillouinShift_frequency_normalized;
