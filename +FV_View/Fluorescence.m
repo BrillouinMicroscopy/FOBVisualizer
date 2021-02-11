@@ -76,40 +76,41 @@ function onFileChange(view, model)
 
     if ~isempty(Fluorescence.repetitions)
         try
-            channelNames = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'memberNames');
-            if (Fluorescence.channel > length(channelNames))
-                Fluorescence.channel = 1;
-            end
-            
-            channelName = channelNames{Fluorescence.channel};
-            set(handles.channels, 'Items', channelNames);
-            set(handles.channels, 'Value', channelName);
+            set(handles.channels, 'Items', Fluorescence.channelNames);
+            set(handles.channels, 'Value', Fluorescence.channelName);
             
             ax = handles.axesImage;
-            type = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'channel', channelName);
             
-            image = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'data', channelName);
-            image = medfilt1(image, 3);
-            date = model.file.readPayloadData('Fluorescence', Fluorescence.repetition.name, 'date', channelName);
-            set(handles.date, 'Text', date);
-            
-            x = 4.8*(1:size(image, 1))/57;
-            x = x - nanmean(x(:));
-            y = 4.8*(1:size(image, 2))/57;
-            y = y - nanmean(y(:));
-    
+            data = Fluorescence.data;
+            set(handles.date, 'Text', Fluorescence.date);
+                
             if ishandle(view.Fluorescence.plot)
                 delete(view.Fluorescence.plot)
             end
-            view.Fluorescence.plot = imagesc(ax, x, y, image);
+            %%
+            % The new UIAxes apparently sucks and can not handle this surf
+            % plot, whereas the old axes could easily. So we have to resort
+            % to calculating an image which imagesc accepts by using
+            % griddata in the Fluorescence controller which takes over 20
+            % seconds per image. We will move to Python...
+
+%             % If the positions array is two-dimensional, we have to use
+%             % surf for plotting
+%             if sum(size(Fluorescence.positions.x, 1, 2, 3) > 1) > 1
+%                 surf(ax, Fluorescence.positions.x, Fluorescence.positions.y, ...
+%                     zeros(size(Fluorescence.positions.y)), data);
+%             else
+                view.Fluorescence.plot = imagesc(ax, Fluorescence.positions.x, Fluorescence.positions.y, data);
+%             end
+            %%
             shading(ax, 'flat');
             axis(ax, 'equal');
             xlabel(ax, '{\it x} [µm]', 'interpreter', 'tex');
             ylabel(ax, '{\it y} [µm]', 'interpreter', 'tex');
-            caxis(ax, [min(image(:)), max(image(:))]);
+            caxis(ax, [min(data(:)), max(data(:))]);
             cb = colorbar(ax);
             ylabel(cb, '{\it I} [a.u.]', 'interpreter', 'tex', 'FontSize', 10);
-            type = lower(type);
+            type = lower(Fluorescence.type);
             switch (type)
                 case 'brightfield'
                     colormap(ax, 'gray')
