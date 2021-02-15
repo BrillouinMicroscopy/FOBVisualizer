@@ -127,7 +127,7 @@ function plotRefractiveIndex(parameters)
         axis equal;
         axis([min(pos.x), max(pos.x), min(pos.y), max(pos.y)]);
         caxis(cax);
-        colormap('jet');
+        colormap(FV_Utils.Colormaps.inferno);
         cb = colorbar;
         title(cb, colorbarTitle, 'interpreter', 'latex');
         view([0 90]);
@@ -161,7 +161,7 @@ function plotRefractiveIndex(parameters)
         pixelValues = pixelValues - cax(1);
         pixelValues = round(2^8*pixelValues/(cax(2)-cax(1)));
 
-        map = jet(2^8);
+        map = FV_Utils.Colormaps.inferno(2^8);
         RGB = ind2rgb(pixelValues, map);
     
         imwrite(RGB,[path filesep 'Plots' filesep 'Bare' filesep filename '_RefractiveIndex.png'], 'BitDepth', 8);

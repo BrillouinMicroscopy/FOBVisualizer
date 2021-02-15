@@ -234,6 +234,7 @@ function plotBrillouinModulus(parameters)
         axis equal;
         axis([min(pos.X(:)), max(pos.X(:)), min(pos.Y(:)), max(pos.Y(:))]);
         caxis(cax);
+        colormap(FV_Utils.Colormaps.viridis);
         cb = colorbar;
         title(cb, colorbarTitle, 'interpreter', 'latex');
         view([0 90]);
@@ -280,7 +281,7 @@ function plotBrillouinModulus(parameters)
         pixelValues = pixelValues - cax(1);
         pixelValues = round(2^8*pixelValues/(cax(2)-cax(1)));
 
-        map = parula(2^8);
+        map = FV_Utils.Colormaps.viridis(2^8);
         RGB = ind2rgb(pixelValues, map);
         
         if showOutline
