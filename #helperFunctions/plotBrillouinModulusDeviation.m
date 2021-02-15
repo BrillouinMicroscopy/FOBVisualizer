@@ -70,12 +70,12 @@ function plotBrillouinModulusDeviation(parameters)
                     M_woRI(~validity) = NaN;
                     M_woRI(validityLevel > parameters.Modulus.validity) = NaN;
                     
-                    if size(M, 5) >= parameters.Modulus.peakNumber && isfield(parameters.Modulus, 'peakNumber')
+                    if isfield(parameters.Modulus, 'peakNumber') && size(M, 5) >= parameters.Modulus.peakNumber
                         M = M(:,:,:,:,parameters.Modulus.peakNumber);
                     else
                         M = M(:,:,:,:,1);
                     end
-                    if size(M_woRI, 5) >= parameters.Modulus.peakNumber && isfield(parameters.Modulus, 'peakNumber')
+                    if isfield(parameters.Modulus, 'peakNumber') && size(M_woRI, 5) >= parameters.Modulus.peakNumber
                         M_woRI = M_woRI(:,:,:,:,parameters.Modulus.peakNumber);
                     else
                         M_woRI = M_woRI(:,:,:,:,1);

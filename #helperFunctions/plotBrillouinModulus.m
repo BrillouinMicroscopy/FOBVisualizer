@@ -46,7 +46,7 @@ function plotBrillouinModulus(parameters)
                     BrillouinShift(validityLevel > parameters.BM.validity) = NaN;
 
                     % average results
-                    if size(BrillouinShift, 5) >= parameters.BM.peakNumber && isfield(parameters.BM, 'peakNumber')
+                    if isfield(parameters.BM, 'peakNumber') && size(BrillouinShift, 5) >= parameters.BM.peakNumber
                         BrillouinShift = BrillouinShift(:,:,:,:,parameters.BM.peakNumber);
                     else
                         BrillouinShift = BrillouinShift(:,:,:,:,1);
@@ -58,7 +58,7 @@ function plotBrillouinModulus(parameters)
                     BrillouinIntensity(validityLevel > parameters.BM.validity) = NaN;
 
                     % average results
-                    if size(BrillouinIntensity, 5) >= parameters.BM.peakNumber && isfield(parameters.BM, 'peakNumber')
+                    if isfield(parameters.BM, 'peakNumber') && size(BrillouinIntensity, 5) >= parameters.BM.peakNumber
                         BrillouinIntensity = BrillouinIntensity(:,:,:,:,parameters.BM.peakNumber);
                     else
                         BrillouinIntensity = BrillouinIntensity(:,:,:,:,1);
@@ -72,7 +72,7 @@ function plotBrillouinModulus(parameters)
                     M(~validity) = NaN;
                     M(validityLevel > parameters.Modulus.validity) = NaN;
 
-                    if size(M, 5) >= parameters.Modulus.peakNumber && isfield(parameters.Modulus, 'peakNumber')
+                    if isfield(parameters.Modulus, 'peakNumber') && size(M, 5) >= parameters.Modulus.peakNumber
                         M = M(:,:,:,:,parameters.Modulus.peakNumber);
                     else
                         M = M(:,:,:,:,1);
@@ -172,7 +172,8 @@ function plotBrillouinModulus(parameters)
                             plotData2D(parameters.path, M_mean, pos, parameters.Modulus.M.cax, ...
                                 '$M$ [GPa]', [alignmentFilename '_modulus'], 0, masks, names);
                     end
-                catch
+                catch e
+                    disp(e);
                 end
             end
         end
