@@ -35,24 +35,57 @@ function loadRepetition(model, view, repetition)
                 name = [name '_rep' num2str(ODT.repetition.name)];
             end
             filepath = [model.filepath '..' filesep 'EvalData' filesep 'Tomogram_Field_' name '.mat'];
-            ODT.data = load(filepath, 'Reconimg', 'res3', 'res4');
+            data = load(filepath, 'Reconimg', 'res3', 'res4');
 
             ODT.date = model.file.readPayloadData('ODT', ODT.repetition.name, 'date', 0);
             
             try
                 scaleCalibration = model.file.getScaleCalibration('ODT', ODT.repetition.name);
             
-                ODT.ROI = model.file.readPayloadData('ODT', Fluorescence.repetition.name, 'ROI', 0);
+                ODT.ROI = model.file.readPayloadData('ODT', ODT.repetition.name, 'ROI', 0);
+                
+                [pixX, pixY] = meshgrid( ...
+                    (0:(ODT.ROI.width_physical - 1)) + ODT.ROI.left, ...
+                    (0:(ODT.ROI.height_physical - 1)) + ODT.ROI.bottom);
+                
+                pixX = pixX - scaleCalibration.origin(1);
+                pixY = pixY - scaleCalibration.origin(2);
+                
+                micrometerX = pixX .* scaleCalibration.pixToMicrometerX(1) + pixY .* scaleCalibration.pixToMicrometerY(1) + ...
+                    scaleCalibration.positionStage(1);
+                micrometerY = pixX .* scaleCalibration.pixToMicrometerX(2) + pixY .* scaleCalibration.pixToMicrometerY(2) + ...
+                    scaleCalibration.positionStage(2);
+                
+                %% Warp images for imagesc using affine transform
+                % See FV_View\Fluorescence.m#L91 for why the hell this is
+                % necessary.
+                x = linspace(min(micrometerX, [], 'all'), max(micrometerX, [], 'all'), round(size(micrometerX, 2)/2));
+                y = linspace(min(micrometerY, [], 'all'), max(micrometerY, [], 'all'), round(size(micrometerY, 1)/2));
+                
+                n = norm([scaleCalibration.micrometerToPixX(1) scaleCalibration.micrometerToPixX(2)]);
+                tform = affine2d([ ...
+                    scaleCalibration.micrometerToPixX(1) scaleCalibration.micrometerToPixX(2) 0; ...
+                    scaleCalibration.micrometerToPixY(1) scaleCalibration.micrometerToPixY(2) 0; ...
+                    0 0 n; ...
+                ]/n);
+
+                ZP5 = round(size(data.Reconimg,3));
+                z = fliplr(((1:ZP5)-ZP5/2)*data.res4);
+
+                [X, Y, Z] = meshgrid(x, y, z);
+
+                data.Reconimg = imwarp(data.Reconimg, tform);
             catch
-                ZP4 = round(size(ODT.data.Reconimg,1));
-                x = ((1:ZP4)-ZP4/2)*ODT.data.res3;
+                ZP4 = round(size(data.Reconimg,1));
+                x = ((1:ZP4)-ZP4/2)*data.res3;
                 y = x;
 
-                ZP5 = round(size(ODT.data.Reconimg,3));
-                z = fliplr(((1:ZP5)-ZP5/2)*ODT.data.res4);
+                ZP5 = round(size(data.Reconimg,3));
+                z = fliplr(((1:ZP5)-ZP5/2)*data.res4);
 
                 [X, Y, Z] = meshgrid(x, y, z);
             end
+            ODT.data = data;
             
             ODT.positions.x = X;
             ODT.positions.y = Y;
