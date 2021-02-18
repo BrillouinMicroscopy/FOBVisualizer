@@ -64,15 +64,19 @@ function loadRepetition(model, repetition, channel)
                 micrometerY = pixX .* scaleCalibration.pixToMicrometerX(2) + pixY .* scaleCalibration.pixToMicrometerY(2) + ...
                     scaleCalibration.positionStage(2);
                 
-                %% Interpolate data for imagesc
+                %% Warp images for imagesc using affine transform
                 % See FV_View\Fluorescence.m#L91 for why the hell this is
                 % necessary.
-                x = linspace(min(micrometerX, [], 'all'), max(micrometerX, [], 'all'), round(size(micrometerX, 2)/2));
-                y = linspace(min(micrometerY, [], 'all'), max(micrometerY, [], 'all'), round(size(micrometerY, 1)/2));
+                x = linspace(min(micrometerX, [], 'all'), max(micrometerX, [], 'all'), round(size(micrometerX, 2)));
+                y = linspace(min(micrometerY, [], 'all'), max(micrometerY, [], 'all'), round(size(micrometerY, 1)));
                 
-                [Xq, Yq] = meshgrid(x, y);
-                
-                data = griddata(micrometerX, micrometerY, data, Xq, Yq);
+                n = norm([scaleCalibration.micrometerToPixX(1) scaleCalibration.micrometerToPixX(2)]);
+                tform = affine2d([ ...
+                    scaleCalibration.micrometerToPixX(1) scaleCalibration.micrometerToPixX(2) 0; ...
+                    scaleCalibration.micrometerToPixY(1) scaleCalibration.micrometerToPixY(2) 0; ...
+                    0 0 n; ...
+                ]/n);
+                data = imwarp(data, tform);
             catch
                 x = 4.8*(1:size(data, 1))/57;
                 x = x - nanmean(x(:));
