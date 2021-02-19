@@ -109,6 +109,8 @@ function onFileChange(view, model)
             ylabel(ax, '{\it y} [µm]', 'interpreter', 'tex');
             caxis(ax, [min(data(:)), max(data(:))]);
             cb = colorbar(ax);
+            xlim(ax, [min(Fluorescence.positions.x, [], 'all'), max(Fluorescence.positions.x, [], 'all')]);
+            ylim(ax, [min(Fluorescence.positions.y, [], 'all'), max(Fluorescence.positions.y, [], 'all')]);
             ylabel(cb, '{\it I} [a.u.]', 'interpreter', 'tex', 'FontSize', 10);
             type = lower(Fluorescence.type);
             switch (type)

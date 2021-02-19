@@ -113,6 +113,8 @@ function onFileChange(FOB_view, model)
                     axis(ax, 'equal');
                     xlabel(ax, ['{\it ' Brillouin.nsdims{2} '} [µm]'], 'interpreter', 'tex');
                     ylabel(ax, ['{\it ' Brillouin.nsdims{1} '} [µm]'], 'interpreter', 'tex');
+                    xlim(ax, [min(pos.(Brillouin.nsdims{2})(1,:), [], 'all'), max(pos.(Brillouin.nsdims{2})(1,:), [], 'all')]);
+                    ylim(ax, [min(pos.(Brillouin.nsdims{1})(:,1), [], 'all'), max(pos.(Brillouin.nsdims{1})(:,1), [], 'all')]);
         %             zlabel(ax, '$z$ [$\mu$m]', 'interpreter', 'latex');
                     cb = colorbar(ax);
                     ylabel(cb, '\nu_{B} [GHz]', 'interpreter', 'tex', 'FontSize', 10);
