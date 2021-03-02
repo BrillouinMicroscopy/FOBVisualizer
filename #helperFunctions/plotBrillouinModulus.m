@@ -171,6 +171,10 @@ function plotBrillouinModulus(parameters)
                             %% Plot longitudinal modulus
                             plotData2D(parameters.path, M_mean, pos, parameters.Modulus.M.cax, ...
                                 '$M$ [GPa]', [alignmentFilename '_modulus'], 0, masks, names);
+
+                            %% Plot density
+                            plotData2D(parameters.path, Rho_mean, pos, parameters.ODT.density.cax, ...
+                                '$\rho$ [g/ml]', [alignmentFilename '_density'], 0, masks, names);
                     end
                 catch e
                     disp(e);
