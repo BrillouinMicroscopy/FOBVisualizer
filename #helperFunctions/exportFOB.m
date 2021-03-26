@@ -2,7 +2,7 @@
 
 parameters = struct( ...
     'path', '.', ...
-    'filename', 'Brillouin-2', ...
+    'filename', 'Brillouin-*', ...
     'ODT', struct( ...
         'RI', struct( ...
             'cax', [1.337 1.47], ...
@@ -14,7 +14,7 @@ parameters = struct( ...
             ...                         %              --> good to always get the same height above the dish
             ...                         % 'ODT':       export the RI relative to the center of the ODT measurement
             ...                         %              --> similar to the preview exports of the ODT evaluation
-            'z', 3 ...                  % [µm]  z-position at which to export (relative to the specified reference)
+            'z', 3 ...                  % [ï¿½m]  z-position at which to export (relative to the specified reference)
         ), ...
         'density', struct( ...
             'cax', [1.0 1.05] ...
@@ -44,28 +44,37 @@ parameters = struct( ...
     ) ...
 );
 
-%% directory for the plots
-plotDir = [parameters.path filesep 'Plots'];
-if ~exist(plotDir, 'dir')
-    mkdir(plotDir);
+%%
+files = dir([parameters.path filesep '**' filesep parameters.filename '.h5']);
+
+for jj = 1:length(files)
+    %% Find all matching files
+    [~, filename, ~] = fileparts(files(jj).name);
+    parameters.filename = filename;
+    parameters.path = replace(files(jj).folder, [filesep 'RawData'], '');
+    
+    %% directory for the plots
+    plotDir = [parameters.path filesep 'Plots'];
+    if ~exist(plotDir, 'dir')
+        mkdir(plotDir);
+    end
+    barePlotDir = [plotDir filesep 'Bare'];
+    if ~exist(barePlotDir, 'dir')
+        mkdir(barePlotDir);
+    end
+    axisPlotDir = [plotDir filesep 'WithAxis'];
+    if ~exist(axisPlotDir, 'dir')
+        mkdir(axisPlotDir);
+    end
+
+    %% Refractive index
+    plotRefractiveIndex(parameters);
+
+    %% Fluorescence and Brightfield
+    plotFluorescence(parameters);
+    plotCombinedFluorescence(parameters);
+
+    %% Brillouin shift and longitudinal modulus
+    plotBrillouinModulus(parameters);
+    plotBrillouinModulusDeviation(parameters);
 end
-barePlotDir = [plotDir filesep 'Bare'];
-if ~exist(barePlotDir, 'dir')
-    mkdir(barePlotDir);
-end
-axisPlotDir = [plotDir filesep 'WithAxis'];
-if ~exist(axisPlotDir, 'dir')
-    mkdir(axisPlotDir);
-end
-
-%% Refractive index
-plotRefractiveIndex(parameters);
-
-%% Fluorescence and Brightfield
-plotFluorescence(parameters);
-plotCombinedFluorescence(parameters);
-
-%% Brillouin shift and longitudinal modulus
-plotBrillouinModulus(parameters);
-plotBrillouinModulusDeviation(parameters);
-
