@@ -33,17 +33,17 @@ function plotCombinedFluorescence(parameters)
     %% Open file for reading
     file = FV_Utils.HDF5Storage.h5bmread(filePath);
     
-    FluoRepetitions = file.getRepetitions('Fluorescence');
+    FLrepetitions = file.getRepetitions('Fluorescence');
     for kk = 1:length(parameters.Fluorescence.combinations)
         combination = parameters.Fluorescence.combinations{kk};
-        for jj = 1:length(FluoRepetitions)
-            channels = file.readPayloadData('Fluorescence', FluoRepetitions{jj}, 'memberNames');
+        for jj = 1:length(FLrepetitions)
+            channels = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'memberNames');
             exportPlot = false;
             % Load one image to get the size
-            img = file.readPayloadData('Fluorescence', FluoRepetitions{jj}, 'data', channels{1});
+            img = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'data', channels{1});
             fluorescence = uint8(zeros(size(img, 1), size(img, 2), 3));
             for ll = 1:length(channels)
-                channel = file.readPayloadData('Fluorescence', FluoRepetitions{jj}, 'channel', channels{ll});
+                channel = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'channel', channels{ll});
                 % If it is a brightfield image, skip it
                 if strcmpi('brightfield', channel)
                     continue;
@@ -55,7 +55,7 @@ function plotCombinedFluorescence(parameters)
                 ind = strfind(combination, lower(channel(1)));
                 backgroundInd = strfind('rgb', lower(channel(1)));
                 if ~isempty(ind)
-                    img = file.readPayloadData('Fluorescence', FluoRepetitions{jj}, 'data', channels{ll});
+                    img = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'data', channels{ll});
                     
                     % If we loaded a background, subtract it
                     if exist('background', 'var')
@@ -72,9 +72,64 @@ function plotCombinedFluorescence(parameters)
             end
             
             if exportPlot
-                fluorescence = flipud(fluorescence);
-                imwrite(fluorescence, [parameters.path filesep 'Plots' filesep 'Bare' filesep ...
-                    parameters.filename '_FLrep' num2str(FluoRepetitions{jj}) '_fluorescenceCombined_' combination '.png'], 'BitDepth', 8);
+                imwrite(flipud(fluorescence), [parameters.path filesep 'Plots' filesep 'Bare' filesep ...
+                    parameters.filename '_FLrep' num2str(FLrepetitions{jj}) '_fluorescenceCombined_' combination '.png'], 'BitDepth', 8);
+                
+                % In case we have a Brillouin measurement, also export the
+                % ROI of Brillouin only
+                BMrepetitions = file.getRepetitions('Brillouin');
+                for mm = 1:length(BMrepetitions)
+                    BMfilename = parameters.filename;
+                    if length(BMrepetitions) > 1
+                        BMfilename = [BMfilename '_rep' num2str(BMrepetitions{mm})]; %#ok<AGROW>
+                    end
+
+                    BMresults = load([parameters.path filesep 'EvalData' filesep BMfilename '.mat']);
+
+                    scaleCalibration = file.getScaleCalibration('Fluorescence', FLrepetitions{jj});
+
+                    ROI = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'ROI', channels{1});
+
+                    [pixX, pixY] = meshgrid( ...
+                        (0:(ROI.width_physical - 1)) + ROI.left, ...
+                        (0:(ROI.height_physical - 1)) + ROI.bottom);
+
+                    pixX = pixX - scaleCalibration.origin(1);
+                    pixY = pixY - scaleCalibration.origin(2);
+
+                    micrometerX = pixX .* scaleCalibration.pixToMicrometerX(1) + pixY .* scaleCalibration.pixToMicrometerY(1) + ...
+                        scaleCalibration.positionStage(1);
+                    micrometerY = pixX .* scaleCalibration.pixToMicrometerX(2) + pixY .* scaleCalibration.pixToMicrometerY(2) + ...
+                        scaleCalibration.positionStage(2);
+
+                    %% Warp images for imagesc using affine transform
+                    n = norm([scaleCalibration.micrometerToPixX(1) scaleCalibration.micrometerToPixX(2)]);
+                    tform = affine2d([ ...
+                        scaleCalibration.micrometerToPixX(1) scaleCalibration.micrometerToPixX(2) 0; ...
+                        scaleCalibration.micrometerToPixY(1) scaleCalibration.micrometerToPixY(2) 0; ...
+                        0 0 n; ...
+                    ]/n);
+                    image_warped = imwarp(fluorescence, tform);
+                    
+                    x = linspace(min(micrometerX, [], 'all'), max(micrometerX, [], 'all'), round(size(image_warped, 2)));
+                    y = linspace(min(micrometerY, [], 'all'), max(micrometerY, [], 'all'), round(size(image_warped, 1)));
+                    
+                    imagePath = [parameters.path filesep 'Plots' filesep 'Bare' filesep parameters.filename ...
+                        sprintf('_FLrep%01d_fluorescenceCombined_%s_BMrep%01d_fullFOV', jj-1, combination, mm-1) '.png'];
+                    
+                    % Export full field-of-view
+                    imwrite(flipud(image_warped), imagePath, 'BitDepth', 8);
+                    
+                    % Export Brillouin ROI only
+                    [~, indX_min] = min(abs(x - min(BMresults.results.parameters.positions.X, [], 'all')));
+                    [~, indX_max] = min(abs(x - max(BMresults.results.parameters.positions.X, [], 'all')));
+                    [~, indY_min] = min(abs(y - min(BMresults.results.parameters.positions.Y, [], 'all')));
+                    [~, indY_max] = min(abs(y - max(BMresults.results.parameters.positions.Y, [], 'all')));
+                    image_warped_BM = image_warped(indY_min:indY_max, indX_min:indX_max, :);
+                    imagePath = [parameters.path filesep 'Plots' filesep 'Bare' filesep parameters.filename ...
+                        sprintf('_FLrep%01d_fluorescenceCombined_%s_BMrep%01d', jj-1, combination, mm-1) '.png'];
+                    imwrite(flipud(image_warped_BM), imagePath, 'BitDepth', 8);
+                end
             end
         end
     end
