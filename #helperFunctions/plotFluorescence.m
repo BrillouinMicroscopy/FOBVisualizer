@@ -12,6 +12,8 @@ function plotFluorescence(parameters)
             imageNumbers = file.readPayloadData('Fluorescence', repetitions{ii}, 'memberNames');
             for kk = 1:length(imageNumbers)
                 channel = file.readPayloadData('Fluorescence', repetitions{ii}, 'channel', imageNumbers{kk});
+                % Capitalize the first letter
+                channel = [upper(channel(1)) channel(2:end)];
                 image = file.readPayloadData('Fluorescence', repetitions{ii}, 'data', imageNumbers{kk});
                 image = flipud(image);
                 %% Construct image path
