@@ -1,7 +1,6 @@
 function plotCombinedFluorescence(parameters)
     
     %% Try to load the background correction image
-    background = uint8(zeros(1024, 1024, 3));
     if isfield(parameters.Fluorescence, 'backgroundFile')
         try
             filePath = [parameters.path filesep 'RawData' filesep parameters.Fluorescence.backgroundFile '.h5'];
@@ -18,7 +17,7 @@ function plotCombinedFluorescence(parameters)
                 
                 ind = strfind('rgb', lower(channel(1)));
                 if ~isempty(ind)
-                    background(:, :, ind) = uint8(file.readPayloadData('Fluorescence', 0, 'data', channels{ll}));
+                    background(:, :, ind) = uint8(file.readPayloadData('Fluorescence', 0, 'data', channels{ll})); %#ok<AGROW>
                 end
             end
             
@@ -36,9 +35,11 @@ function plotCombinedFluorescence(parameters)
     for kk = 1:length(parameters.Fluorescence.combinations)
         combination = parameters.Fluorescence.combinations{kk};
         for jj = 1:length(FluoRepetitions)
-            fluorescence = uint8(zeros(1024, 1024, 3));
             channels = file.readPayloadData('Fluorescence', FluoRepetitions{jj}, 'memberNames');
             exportPlot = false;
+            % Load one image to get the size
+            img = file.readPayloadData('Fluorescence', FluoRepetitions{jj}, 'data', channels{1});
+            fluorescence = uint8(zeros(size(img, 1), size(img, 2), 3));
             for ll = 1:length(channels)
                 channel = file.readPayloadData('Fluorescence', FluoRepetitions{jj}, 'channel', channels{ll});
                 % If it is a brightfield image, skip it
@@ -53,15 +54,18 @@ function plotCombinedFluorescence(parameters)
                 backgroundInd = strfind('rgb', lower(channel(1)));
                 if ~isempty(ind)
                     img = file.readPayloadData('Fluorescence', FluoRepetitions{jj}, 'data', channels{ll});
+                    
+                    % If we loaded a background, subtract it
+                    if exist('background', 'var')
+                        img = uint8(img) - background(:, :, backgroundInd);
+                    end
 
-                    temp = uint8(img) - background(:, :, backgroundInd);
-
-                    temp = temp - mean2(temp(end-15:end-5, 5:15));
-                    temp = conv2(temp, fspecial('disk', 2), 'same');
-                    pmap = imgaussfilt(temp, 300);
-                    temp = temp - pmap;
-                    temp = wiener2(temp, [5 5]);
-                    fluorescence(:, :, ind) = uint8(temp ./ max(temp(:)) * 255);
+                    img = img - mean2(img(end-15:end-5, 5:15));
+                    img = conv2(img, fspecial('disk', 2), 'same');
+                    pmap = imgaussfilt(img, 300);
+                    img = img - pmap;
+                    img = wiener2(img, [5 5]);
+                    fluorescence(:, :, ind) = uint8(img ./ max(img(:)) * 255);
                 end
             end
             
