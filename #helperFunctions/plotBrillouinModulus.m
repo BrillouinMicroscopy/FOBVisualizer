@@ -7,6 +7,11 @@ function plotBrillouinModulus(parameters)
         
         %% Loop over all repetitions
         ODTrepetitions = file.getRepetitions('ODT');
+        % In case there are no ODT measurements, we still want to export
+        % the Brillouin measurements
+        if isempty(ODTrepetitions)
+            ODTrepetitions{1} = '';
+        end
         BMrepetitions = file.getRepetitions('Brillouin');
         
         %% Loop over all combinations of BM and ODT repetitions
@@ -14,15 +19,27 @@ function plotBrillouinModulus(parameters)
             for jj = 1:length(BMrepetitions)
                 try
                     %% Load alignment and modulus
-                    alignmentFilename = parameters.filename;
+                    modulusFilename = parameters.filename;
                     if length(BMrepetitions) > 1
-                        alignmentFilename = [alignmentFilename '_BMrep' num2str(BMrepetitions{jj})]; %#ok<AGROW>
+                        modulusFilename = [modulusFilename '_BMrep' num2str(BMrepetitions{jj})]; %#ok<AGROW>
                     end
                     if length(ODTrepetitions) > 1
-                        alignmentFilename = [alignmentFilename '_ODTrep' num2str(ODTrepetitions{ll})]; %#ok<AGROW>
+                        modulusFilename = [modulusFilename '_ODTrep' num2str(ODTrepetitions{ll})]; %#ok<AGROW>
                     end
-                    alignmentPath = [parameters.path filesep 'EvalData' filesep alignmentFilename '_modulus.mat'];
-                    alignment = load(alignmentPath);
+                    modulusPath = [parameters.path filesep 'EvalData' filesep modulusFilename '_modulus.mat'];
+                    if exist(modulusPath, 'file')
+                        modulus = load(modulusPath);
+                    else
+                        modulus = struct( ...
+                            'invalid', true, ...
+                            'Alignment', struct( ...
+                                'dx', 0, ...
+                                'dy', 0, ...
+                                'dz', 0, ...
+                                'z0', 0 ...
+                            ) ...
+                        );
+                    end
             
                     %% plot the measurement results
                     BMfilename = parameters.filename;
@@ -66,37 +83,40 @@ function plotBrillouinModulus(parameters)
                     BI_mean = nanmean(BrillouinIntensity, 4);
                     BI_mean = BI_mean./max(BI_mean(:));
                     
-                    M = 1e-9*alignment.modulus.M;
+                    if ~isfield(modulus, 'invalid')
+                        M = 1e-9*modulus.modulus.M;
 
-                    % filter invalid values
-                    M(~validity) = NaN;
-                    M(validityLevel > parameters.Modulus.validity) = NaN;
+                        % filter invalid values
+                        M(~validity) = NaN;
+                        M(validityLevel > parameters.Modulus.validity) = NaN;
 
-                    if isfield(parameters.Modulus, 'peakNumber') && size(M, 5) >= parameters.Modulus.peakNumber
-                        M = M(:,:,:,:,parameters.Modulus.peakNumber);
-                    else
-                        M = M(:,:,:,:,1);
+                        if isfield(parameters.Modulus, 'peakNumber') && size(M, 5) >= parameters.Modulus.peakNumber
+                            M = M(:,:,:,:,parameters.Modulus.peakNumber);
+                        else
+                            M = M(:,:,:,:,1);
+                        end
+                        M_mean = nanmean(M, 4);
+
+                        % filter invalid values
+                        Rho = 1e-3*modulus.density.rho;
+                        Rho(~validity) = NaN;
+                        Rho(validityLevel > parameters.Modulus.validity) = NaN;
+
+                        Rho_mean = nanmean(Rho, 4);
                     end
-                    M_mean = nanmean(M, 4);
-                    
-                    % filter invalid values
-                    Rho = 1e-3*alignment.density.rho;
-                    Rho(~validity) = NaN;
-                    Rho(validityLevel > parameters.Modulus.validity) = NaN;
-
-                    Rho_mean = nanmean(Rho, 4);
 
                     %% Calculate zero mean positions
                     dims = {'X', 'Y', 'Z'};
                     dimslabel = {'x', 'y', 'z'};
                     for kk = 1:length(dims)
                         pos.([dims{kk}]) = ...
-                            BMresults.results.parameters.positions.(dims{kk});
+                            BMresults.results.parameters.positions.(dims{kk}) ...
+                             - mean(BMresults.results.parameters.positions.(dims{kk})(:))*ones(size(BMresults.results.parameters.positions.(dims{kk})));
                         pos.([dims{kk}]) = squeeze(pos.([dims{kk}]));
                     end
-                    pos.X = pos.X + alignment.Alignment.dx;
-                    pos.Y = pos.Y + alignment.Alignment.dy;
-                    pos.Z = pos.Z + alignment.Alignment.dz;
+                    pos.X = pos.X + modulus.Alignment.dx;
+                    pos.Y = pos.Y + modulus.Alignment.dy;
+                    pos.Z = pos.Z + modulus.Alignment.dz;
                     
                     %% Find the dimension of the measurement
                     dimensions = size(BS_mean, 1, 2, 3);
@@ -123,35 +143,28 @@ function plotBrillouinModulus(parameters)
                     Brillouin.nsdimslabel = nsdimslabel;
                     Brillouin.sdims = sdims;
                     
-                    z0 = alignment.Alignment.z0;
+                    z0 = modulus.Alignment.z0;
                     
                     switch (Brillouin.dimension)
                         case 0
                         case 1
                             %% Plot Brillouin shift
                             plotData1D(parameters.path, BS_mean, pos, parameters.BM.shift.cax, '$\nu_\mathrm{B}$ [GHz]', ...
-                                [alignmentFilename '_shift'], Brillouin, z0);
+                                [modulusFilename '_shift'], Brillouin, z0);
 
                             %% Plot Brillouin intensity
                             plotData1D(parameters.path, BI_mean, pos, parameters.BM.intensity.cax, '$I$ [a.u.]', ...
-                                [alignmentFilename '_int'], Brillouin, z0);
-
-                            %% Plot longitudinal modulus
-                            plotData1D(parameters.path, M_mean, pos, parameters.Modulus.M.cax, ...
-                                '$M$ [GPa]', [alignmentFilename '_modulus'], Brillouin, z0);
+                                [modulusFilename '_int'], Brillouin, z0);
+                            
+                            
+                            if ~isfield(modulus, 'invalid')
+                                %% Plot longitudinal modulus
+                                plotData1D(parameters.path, M_mean, pos, parameters.Modulus.M.cax, ...
+                                    '$M$ [GPa]', [modulusFilename '_modulus'], Brillouin, z0);
+                            end
 
                         case 2
-                            %% Calculate the FOV for the RI measurements
-                            if isfield(BMresults.results.results, 'RISection')
-                                nrPix = size(BMresults.results.results.RISection, 1);
-                            else
-                                nrPix = 342; %% Should be extracted correctly without hardcoding
-                            end
-                            res = 0.2530;
-                            pos.X_RI = ((1:nrPix) - nrPix/2) * res;
-                            pos.Y_RI = pos.X_RI;
 
-                            %% Plot Brillouin Shift
                             names = {};
                             try
                                 masks = BMresults.results.results.masks;
@@ -159,22 +172,35 @@ function plotBrillouinModulus(parameters)
                                 masks = {};
                             end
 
+                            if ~isfield(modulus, 'invalid')
+                                %% Calculate the FOV for the RI measurements
+                                if isfield(BMresults.results.results, 'RISection')
+                                    nrPix = size(BMresults.results.results.RISection, 1);
+                                else
+                                    nrPix = 342; %% Should be extracted correctly without hardcoding
+                                end
+                                res = 0.2530;
+                                pos.X_RI = ((1:nrPix) - nrPix/2) * res;
+                                pos.Y_RI = pos.X_RI;
+
+                                %% Plot longitudinal modulus
+                                plotData2D(parameters.path, M_mean, pos, parameters.Modulus.M.cax, ...
+                                    '$M$ [GPa]', [modulusFilename '_modulus'], 0, masks, names);
+
+                                %% Plot density
+                                plotData2D(parameters.path, Rho_mean, pos, parameters.ODT.density.cax, ...
+                                    '$\rho$ [g/ml]', [modulusFilename '_density'], 0, masks, names);
+                            end
+
+                            %% Plot Brillouin Shift
                             plotData2D(parameters.path, BS_mean, pos, parameters.BM.shift.cax, '$\nu_\mathrm{B}$ [GHz]', ...
-                                [alignmentFilename '_shift'], 0, masks, names);
-                            plotData2D(parameters.path, BS_mean, pos, parameters.BM.shift.cax, '$\nu_\mathrm{B}$ [GHz]', ...
-                                [alignmentFilename '_shift_outline'], 1, masks, names);
+                                [modulusFilename '_shift'], 0, masks, names);
+%                             plotData2D(parameters.path, BS_mean, pos, parameters.BM.shift.cax, '$\nu_\mathrm{B}$ [GHz]', ...
+%                                 [modulusFilename '_shift_outline'], 1, masks, names);
 
                             %% Plot Brillouin intensity
                             plotData2D(parameters.path, BI_mean, pos, parameters.BM.intensity.cax, '$I$ [a.u.]', ...
-                                [alignmentFilename '_int'], 0, masks, names);
-
-                            %% Plot longitudinal modulus
-                            plotData2D(parameters.path, M_mean, pos, parameters.Modulus.M.cax, ...
-                                '$M$ [GPa]', [alignmentFilename '_modulus'], 0, masks, names);
-
-                            %% Plot density
-                            plotData2D(parameters.path, Rho_mean, pos, parameters.ODT.density.cax, ...
-                                '$\rho$ [g/ml]', [alignmentFilename '_density'], 0, masks, names);
+                                [modulusFilename '_int'], 0, masks, names);
                     end
                 catch e
                     disp(e);
@@ -256,17 +282,19 @@ function plotBrillouinModulus(parameters)
             'colpos', [0.82 0.17 0.059 0.74] ...
         );
         prepare_fig([plotPath filesep 'Plots' filesep 'WithAxis' filesep filename], ...
-            'output', 'png', 'style', 'article', 'layout', layout);
-        
-        % Also export the plot with the ODT FOV limits
-        axis([min(pos.X_RI(:)), max(pos.X_RI(:)), min(pos.Y_RI(:)), max(pos.Y_RI(:))]);
-        layout = struct( ...
-            'figpos', [1 1 8 6], ...
-            'axepos', [0.10 0.17 0.7 0.74], ...
-            'colpos', [0.8 0.17 0.059 0.74] ...
-        );
-        prepare_fig([plotPath filesep 'Plots' filesep 'WithAxis' filesep filename '_fullFOV'], ...
             'output', 'png', 'style', 'article', 'command', {'close'}, 'layout', layout);
+        
+        if isfield(pos, 'X_RI')
+            % Also export the plot with the ODT FOV limits
+            axis([min(pos.X_RI(:)), max(pos.X_RI(:)), min(pos.Y_RI(:)), max(pos.Y_RI(:))]);
+            layout = struct( ...
+                'figpos', [1 1 8 6], ...
+                'axepos', [0.10 0.17 0.7 0.74], ...
+                'colpos', [0.8 0.17 0.059 0.74] ...
+            );
+            prepare_fig([plotPath filesep 'Plots' filesep 'WithAxis' filesep filename '_fullFOV'], ...
+                'output', 'png', 'style', 'article', 'command', {'close'}, 'layout', layout);
+        end
 
         %% print image without axis and colorbar
 
@@ -317,24 +345,26 @@ function plotBrillouinModulus(parameters)
     
         imwrite(RGB, [plotPath filesep 'Plots' filesep 'Bare' filesep filename '_bare.png'], 'BitDepth', 8, 'Alpha', transparent);
         
-        %% Calculate an image with the same FOV as the ODT result
-        [X, Y] = meshgrid(pos.X(1,:), pos.Y(:,1));
-        xmin = min(pos.X_RI);
-        xmax = max(pos.X_RI);
-        nrPosX = round((xmax - xmin)/abs(pos.X(1,1) - pos.X(1,2)));
-        x_new = linspace(xmin, xmax, nrPosX);
-        ymin = min(pos.X_RI);
-        ymax = max(pos.X_RI);
-        nrPosY = round((ymax - ymin)/abs(pos.Y(1,1) - pos.Y(2,1)));
-        y_new = linspace(xmin, xmax, nrPosY);
-        [X_RI, Y_RI] = meshgrid(x_new, y_new);
-        
-        RGB_fullFOV(:,:,1) = interp2(X, Y, RGB(:,:,1), X_RI, Y_RI, 'nearest');
-        RGB_fullFOV(:,:,2) = interp2(X, Y, RGB(:,:,2), X_RI, Y_RI, 'nearest');
-        RGB_fullFOV(:,:,3) = interp2(X, Y, RGB(:,:,3), X_RI, Y_RI, 'nearest');
-        
-        transparent = double(~isnan(RGB_fullFOV(:,:,1)));
+        if isfield(pos, 'X_RI')
+            %% Calculate an image with the same FOV as the ODT result
+            [X, Y] = meshgrid(pos.X(1,:), pos.Y(:,1));
+            xmin = min(pos.X_RI);
+            xmax = max(pos.X_RI);
+            nrPosX = round((xmax - xmin)/abs(pos.X(1,1) - pos.X(1,2)));
+            x_new = linspace(xmin, xmax, nrPosX);
+            ymin = min(pos.X_RI);
+            ymax = max(pos.X_RI);
+            nrPosY = round((ymax - ymin)/abs(pos.Y(1,1) - pos.Y(2,1)));
+            y_new = linspace(xmin, xmax, nrPosY);
+            [X_RI, Y_RI] = meshgrid(x_new, y_new);
 
-        imwrite(RGB_fullFOV, [plotPath filesep 'Plots' filesep 'Bare' filesep filename '_fullFOV_bare.png'], 'BitDepth', 8, 'Alpha', transparent);
+            RGB_fullFOV(:,:,1) = interp2(X, Y, RGB(:,:,1), X_RI, Y_RI, 'nearest');
+            RGB_fullFOV(:,:,2) = interp2(X, Y, RGB(:,:,2), X_RI, Y_RI, 'nearest');
+            RGB_fullFOV(:,:,3) = interp2(X, Y, RGB(:,:,3), X_RI, Y_RI, 'nearest');
+
+            transparent = double(~isnan(RGB_fullFOV(:,:,1)));
+
+            imwrite(RGB_fullFOV, [plotPath filesep 'Plots' filesep 'Bare' filesep filename '_fullFOV_bare.png'], 'BitDepth', 8, 'Alpha', transparent);
+        end
     end
 end
