@@ -4,7 +4,7 @@ function plotBrillouinModulusDeviation(parameters)
         %% construct filename
         filePath = [parameters.path filesep 'RawData' filesep parameters.filename '.h5'];
         %% Open file for reading
-        file = h5bmread(filePath);
+        file = FV_Utils.HDF5Storage.h5bmread(filePath);
         
         %% Loop over all repetitions
         ODTrepetitions = file.getRepetitions('ODT');

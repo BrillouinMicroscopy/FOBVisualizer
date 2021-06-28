@@ -6,7 +6,7 @@ function plotCombinedFluorescence(parameters)
             filePath = [parameters.path filesep 'RawData' filesep parameters.Fluorescence.backgroundFile '.h5'];
             if exist(filePath, 'file')
                 %% Open file for reading
-                file = h5bmread(filePath);
+                file = FV_Utils.HDF5Storage.h5bmread(filePath);
 
                 channels = file.readPayloadData('Fluorescence', 0, 'memberNames');
                 for ll = 1:length(channels)
@@ -31,7 +31,7 @@ function plotCombinedFluorescence(parameters)
     %% construct filename
     filePath = [parameters.path filesep 'RawData' filesep parameters.filename '.h5'];
     %% Open file for reading
-    file = h5bmread(filePath);
+    file = FV_Utils.HDF5Storage.h5bmread(filePath);
     
     FluoRepetitions = file.getRepetitions('Fluorescence');
     for kk = 1:length(parameters.Fluorescence.combinations)
