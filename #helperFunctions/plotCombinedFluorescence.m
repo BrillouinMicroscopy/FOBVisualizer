@@ -4,24 +4,26 @@ function plotCombinedFluorescence(parameters)
     if isfield(parameters.Fluorescence, 'backgroundFile')
         try
             filePath = [parameters.path filesep 'RawData' filesep parameters.Fluorescence.backgroundFile '.h5'];
-            %% Open file for reading
-            file = h5bmread(filePath);
-            
-            channels = file.readPayloadData('Fluorescence', 0, 'memberNames');
-            for ll = 1:length(channels)
-                channel = file.readPayloadData('Fluorescence', 0, 'channel', channels{ll});
-                % If it is a brightfield image, skip it
-                if strcmpi('brightfield', channel)
-                    continue;
+            if exist(filePath, 'file')
+                %% Open file for reading
+                file = h5bmread(filePath);
+
+                channels = file.readPayloadData('Fluorescence', 0, 'memberNames');
+                for ll = 1:length(channels)
+                    channel = file.readPayloadData('Fluorescence', 0, 'channel', channels{ll});
+                    % If it is a brightfield image, skip it
+                    if strcmpi('brightfield', channel)
+                        continue;
+                    end
+
+                    ind = strfind('rgb', lower(channel(1)));
+                    if ~isempty(ind)
+                        background(:, :, ind) = uint8(file.readPayloadData('Fluorescence', 0, 'data', channels{ll})); %#ok<AGROW>
+                    end
                 end
-                
-                ind = strfind('rgb', lower(channel(1)));
-                if ~isempty(ind)
-                    background(:, :, ind) = uint8(file.readPayloadData('Fluorescence', 0, 'data', channels{ll})); %#ok<AGROW>
-                end
+
+                h5bmclose(file);
             end
-            
-            h5bmclose(file);
         catch
         end
     end
