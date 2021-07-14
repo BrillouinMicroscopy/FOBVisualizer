@@ -123,7 +123,8 @@ function plotCombinedFluorescence(parameters)
                     y = linspace(min(micrometerY, [], 'all'), max(micrometerY, [], 'all'), round(size(image_warped, 1)));
                     
                     imagePath = [parameters.path filesep 'Plots' filesep 'Bare' filesep parameters.filename ...
-                        sprintf('_FLrep%01d_fluorescenceCombined_%s_BMrep%01d_fullFOV', jj-1, combination, mm-1) '.png'];
+                        '_FLrep' num2str(FLrepetitions{jj}) ...
+                        sprintf('_fluorescenceCombined_%s_BMrep', combination) num2str(BMrepetitions{mm}) '_fullFOV.png'];
                     
                     % Export full field-of-view
                     imwrite(flipud(image_warped), imagePath, 'BitDepth', 8);
@@ -135,7 +136,8 @@ function plotCombinedFluorescence(parameters)
                     [~, indY_max] = min(abs(y - max(BMresults.results.parameters.positions.Y, [], 'all')));
                     image_warped_BM = image_warped(indY_min:indY_max, indX_min:indX_max, :);
                     imagePath = [parameters.path filesep 'Plots' filesep 'Bare' filesep parameters.filename ...
-                        sprintf('_FLrep%01d_fluorescenceCombined_%s_BMrep%01d', jj-1, combination, mm-1) '.png'];
+                        '_FLrep' num2str(FLrepetitions{jj}) ...
+                        sprintf('_fluorescenceCombined_%s_BMrep', combination) num2str(BMrepetitions{mm}) '.png'];
                     imwrite(flipud(image_warped_BM), imagePath, 'BitDepth', 8);
                 end
             end

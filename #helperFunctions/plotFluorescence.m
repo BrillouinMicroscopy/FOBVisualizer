@@ -17,7 +17,7 @@ function plotFluorescence(parameters)
                 image = file.readPayloadData('Fluorescence', FLrepetitions{ii}, 'data', imageNumbers{kk});
                 %% Construct image path
                 imagePath = [parameters.path filesep 'Plots' filesep parameters.filename ...
-                    sprintf('_FLrep%01d_channel%s', ii-1, channel) '.png'];
+                    '_FLrep' num2str(FLrepetitions{ii}) sprintf('_channel%s', channel) '.png'];
                 switch (channel)
                     case 'Brightfield'
                         nrValues = 256;
@@ -79,7 +79,7 @@ function plotFluorescence(parameters)
                     y = linspace(min(micrometerY, [], 'all'), max(micrometerY, [], 'all'), round(size(image_warped, 1)));
                     
                     imagePath = [parameters.path filesep 'Plots' filesep parameters.filename ...
-                        sprintf('_FLrep%01d_channel%s_BMrep%01d_fullFOV', ii-1, channel, jj-1) '.png'];
+                        '_FLrep' num2str(FLrepetitions{ii}) sprintf('_channel%s_BMrep', channel) num2str(BMrepetitions{jj}) '_fullFOV.png'];
                     
                     % Export full field-of-view
                     imwrite(flipud(image_warped), map, imagePath);
@@ -91,7 +91,7 @@ function plotFluorescence(parameters)
                     [~, indY_max] = min(abs(y - max(BMresults.results.parameters.positions.Y, [], 'all')));
                     image_warped_BM = image_warped(indY_min:indY_max, indX_min:indX_max);
                     imagePath = [parameters.path filesep 'Plots' filesep parameters.filename ...
-                        sprintf('_FLrep%01d_channel%s_BMrep%01d', ii-1, channel, jj-1) '.png'];
+                        '_FLrep' num2str(FLrepetitions{ii}) sprintf('_channel%s_BMrep', channel) num2str(BMrepetitions{jj}) '.png'];
                     imwrite(flipud(image_warped_BM), map, imagePath);
                 end
             end
