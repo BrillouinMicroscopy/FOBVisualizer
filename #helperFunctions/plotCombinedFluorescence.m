@@ -60,6 +60,14 @@ function plotCombinedFluorescence(parameters)
                     % If we loaded a background, subtract it
                     if exist('background', 'var')
                         img = uint8(img) - background(:, :, backgroundInd);
+                    % If we didn't subtract a background image, we apply a
+                    % medianfilter to remove salt and pepper noise for
+                    % pixels whose value is more than 3 sigma different
+                    % than the median filtered value
+                    else
+                        img_filtered = medfilt2(img);
+                        tmp = abs(img - img_filtered) > 3*std(img, 0, 'all');
+                        img(tmp) = img_filtered(tmp);
                     end
 
                     img = img - mean2(img(end-15:end-5, 5:15));
