@@ -48,13 +48,13 @@ function plotCombinedFluorescence(parameters)
                 if strcmpi('brightfield', channel)
                     continue;
                 end
-                exportPlot = true;
 
                 % Check if the channel is contained in the requested
                 % combinations
                 ind = strfind(combination, lower(channel(1)));
                 backgroundInd = strfind('rgb', lower(channel(1)));
                 if ~isempty(ind)
+                    exportPlot = true;
                     img = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'data', channels{ll});
                     
                     % If we loaded a background, subtract it
