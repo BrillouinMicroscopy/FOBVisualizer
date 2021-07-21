@@ -89,7 +89,23 @@ function plotFluorescence(parameters)
                     [~, indX_max] = min(abs(x - max(BMresults.results.parameters.positions.X, [], 'all')));
                     [~, indY_min] = min(abs(y - min(BMresults.results.parameters.positions.Y, [], 'all')));
                     [~, indY_max] = min(abs(y - max(BMresults.results.parameters.positions.Y, [], 'all')));
-                    image_warped_BM = image_warped(indY_min:indY_max, indX_min:indX_max);
+                    
+                    %% Interpolate the image to have the correct pixel count
+                    [X, Y] = meshgrid(x, y);
+                    % find the minimum resolution
+                    resolution = min( ... % [pix/µm]
+                        abs((indX_max-indX_min) / (x(indX_max) - x(indX_min))), ...
+                        abs((indY_max-indY_min) / (y(indY_max) - y(indY_min))) );
+                    % create position vectors with the respective
+                    % resolution
+                    x_new = linspace(x(indX_min), x(indX_max), round((x(indX_max) - x(indX_min)) * resolution));
+                    y_new = linspace(y(indY_min), y(indY_max), round((y(indY_max) - y(indY_min)) * resolution));
+                    [Xq, Yq] = meshgrid(x_new, y_new);
+                    image_warped_BM = uint8(zeros(length(y_new), length(x_new), size(image_warped, 3)));
+                    for dd = 1:size(image_warped, 3)
+                        image_warped_BM(:,:,dd) = uint8(interp2(X, Y, double(image_warped(:,:,dd)), Xq, Yq));
+                    end
+
                     imagePath = [parameters.path filesep 'Plots' filesep parameters.filename ...
                         '_FLrep' num2str(FLrepetitions{ii}) sprintf('_channel%s_BMrep', channel) num2str(BMrepetitions{jj}) '.png'];
                     imwrite(flipud(image_warped_BM), map, imagePath);
