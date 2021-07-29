@@ -38,7 +38,14 @@ function plotCombinedFluorescence(parameters)
         combination = parameters.Fluorescence.combinations{kk};
         for jj = 1:length(FLrepetitions)
             channels = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'memberNames');
-            exportPlot = false;
+            %% Check if we have an image for every requested channel
+            exportPlot = zeros(1, length(combination));
+            for channelInd = 1:length(combination)
+                if strcmp(combination(channelInd), '_')
+                    exportPlot(channelInd) = 1;
+                end
+            end
+
             % Load one image to get the size
             img = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'data', channels{1});
             fluorescence = uint8(zeros(size(img, 1), size(img, 2), 3));
@@ -54,7 +61,7 @@ function plotCombinedFluorescence(parameters)
                 ind = strfind(combination, lower(channel(1)));
                 backgroundInd = strfind('rgb', lower(channel(1)));
                 if ~isempty(ind)
-                    exportPlot = true;
+                    exportPlot(ind) = 1;
                     img = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'data', channels{ll});
                     
                     % If we loaded a background, subtract it
@@ -79,7 +86,7 @@ function plotCombinedFluorescence(parameters)
                 end
             end
             
-            if exportPlot
+            if isempty(find(~exportPlot, 1))
                 imwrite(flipud(fluorescence), [parameters.path filesep 'Plots' filesep 'Bare' filesep ...
                     parameters.filename '_FLrep' num2str(FLrepetitions{jj}) '_fluorescenceCombined_' combination '.png'], 'BitDepth', 8);
                 
