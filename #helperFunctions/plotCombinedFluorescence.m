@@ -48,7 +48,7 @@ function plotCombinedFluorescence(parameters)
 
             % Load one image to get the size
             img = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'data', channels{1});
-            fluorescence = uint8(zeros(size(img, 1), size(img, 2), 3));
+            fluorescence = zeros(size(img, 1), size(img, 2), 3);
             for ll = 1:length(channels)
                 channel = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'channel', channels{ll});
                 % If it is a brightfield image, skip it
@@ -82,11 +82,29 @@ function plotCombinedFluorescence(parameters)
                     pmap = imgaussfilt(img, 300);
                     img = img - pmap;
                     img = wiener2(img, [5 5]);
-                    fluorescence(:, :, ind) = uint8(img ./ max(img(:)) * 255);
+                    fluorescence(:, :, ind) = img;
                 end
             end
             
             if isempty(find(~exportPlot, 1))
+                %% Setting the contrast of the different channels
+                if isfield(parameters.Fluorescence, 'contrast')
+                    % Scale all channels by the same factor
+                    if strcmp(parameters.Fluorescence.contrast, 'equal')
+                        fluorescence = uint8(fluorescence ./ max(fluorescence(:)) * 255);
+                    % Scale each channel to max contrast
+                    elseif strcmp(parameters.Fluorescence.contrast, 'max')
+                        for ch = 1:size(fluorescence, 3)
+                            fluorescence(:, :, ch) = fluorescence(:, :, ch) ./ max(fluorescence(:, :, ch), [], 'all') * 255;
+                        end
+                    end
+                else
+                    for ch = 1:size(fluorescence, 3)
+                        fluorescence(:, :, ch) = fluorescence(:, :, ch) ./ max(fluorescence(:, :, ch), [], 'all') * 255;
+                    end
+                end
+                fluorescence = uint8(fluorescence);
+
                 imwrite(flipud(fluorescence), [parameters.path filesep 'Plots' filesep 'Bare' filesep ...
                     parameters.filename '_FLrep' num2str(FLrepetitions{jj}) '_fluorescenceCombined_' combination '.png'], 'BitDepth', 8);
                 
@@ -141,7 +159,7 @@ function plotCombinedFluorescence(parameters)
                     [X, Y] = meshgrid(x, y);
                     
                     % Find the minimum resolution
-                    resolution = min( ... % [pix/ï¿½m]
+                    resolution = min( ... % [pix/µm]
                         sqrt(sum(scaleCalibration.micrometerToPixX.^2)), ...
                         sqrt(sum(scaleCalibration.micrometerToPixY.^2)) );
 
