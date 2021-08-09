@@ -75,32 +75,36 @@ function plotFluorescence(parameters)
                     ]/n);
                     image_warped = imwarp(image, tform);
                     
-                    x = linspace(min(micrometerX, [], 'all'), max(micrometerX, [], 'all'), round(size(image_warped, 2)));
-                    y = linspace(min(micrometerY, [], 'all'), max(micrometerY, [], 'all'), round(size(image_warped, 1)));
-                    
                     imagePath = [parameters.path filesep 'Plots' filesep parameters.filename ...
                         '_FLrep' num2str(FLrepetitions{ii}) sprintf('_channel%s_BMrep', channel) num2str(BMrepetitions{jj}) '_fullFOV.png'];
                     
-                    % Export full field-of-view
+                    %% Export full field-of-view
                     imwrite(flipud(image_warped), map, imagePath);
                     
-                    % Export Brillouin ROI only
-                    [~, indX_min] = min(abs(x - min(BMresults.results.parameters.positions.X, [], 'all')));
-                    [~, indX_max] = min(abs(x - max(BMresults.results.parameters.positions.X, [], 'all')));
-                    [~, indY_min] = min(abs(y - min(BMresults.results.parameters.positions.Y, [], 'all')));
-                    [~, indY_max] = min(abs(y - max(BMresults.results.parameters.positions.Y, [], 'all')));
-                    
-                    %% Interpolate the image to have the correct pixel count
+                    %% Only export the Brillouin field-of-view
+                    % Calculate the grid of the image
+                    x = linspace(min(micrometerX, [], 'all'), max(micrometerX, [], 'all'), round(size(image_warped, 2)));
+                    y = linspace(min(micrometerY, [], 'all'), max(micrometerY, [], 'all'), round(size(image_warped, 1)));
+
                     [X, Y] = meshgrid(x, y);
-                    % find the minimum resolution
+                    
+                    % Find the minimum resolution
                     resolution = min( ... % [pix/µm]
-                        abs((indX_max-indX_min) / (x(indX_max) - x(indX_min))), ...
-                        abs((indY_max-indY_min) / (y(indY_max) - y(indY_min))) );
-                    % create position vectors with the respective
-                    % resolution
-                    x_new = linspace(x(indX_min), x(indX_max), round((x(indX_max) - x(indX_min)) * resolution));
-                    y_new = linspace(y(indY_min), y(indY_max), round((y(indY_max) - y(indY_min)) * resolution));
+                        sqrt(sum(scaleCalibration.micrometerToPixX.^2)), ...
+                        sqrt(sum(scaleCalibration.micrometerToPixY.^2)) );
+
+                    % Create position vectors with the respective resolution
+                    x_min = min(BMresults.results.parameters.positions.X, [], 'all');
+                    x_max = max(BMresults.results.parameters.positions.X, [], 'all');
+                    x_new = linspace(x_min, x_max, round((x_max - x_min) * resolution));
+                    
+                    y_min = min(BMresults.results.parameters.positions.Y, [], 'all');
+                    y_max = max(BMresults.results.parameters.positions.Y, [], 'all');
+                    y_new = linspace(y_min, y_max, round((y_max - y_min) * resolution));
+                    
                     [Xq, Yq] = meshgrid(x_new, y_new);
+
+                    % Interpolate the image
                     image_warped_BM = uint8(zeros(length(y_new), length(x_new), size(image_warped, 3)));
                     for dd = 1:size(image_warped, 3)
                         image_warped_BM(:,:,dd) = uint8(interp2(X, Y, double(image_warped(:,:,dd)), Xq, Yq));
