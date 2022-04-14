@@ -194,7 +194,7 @@ function plotBrillouinModulus(parameters)
                             
                             %% Export as Tif for usage in Fiji
                             if isfield(parameters.BM.shift, 'exportTif') && parameters.BM.shift.exportTif
-                                BS_mean_export = uint16(real(BS_mean)*10000);
+                                BS_mean_export = flipud(uint16(real(BS_mean)*10000));
                                 imwrite(BS_mean_export, [parameters.path filesep 'Plots' filesep 'Bare' filesep modulusFilename '_shift_bare.tif']);
                             end
 
