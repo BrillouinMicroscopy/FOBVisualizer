@@ -191,6 +191,12 @@ function plotBrillouinModulus(parameters)
                                 plotData2D(parameters.path, Rho_mean, pos, parameters.ODT.density.cax, ...
                                     '$\rho$ [g/ml]', [modulusFilename '_density'], 0, masks, names);
                             end
+                            
+                            %% Export as Tif for usage in Fiji
+                            if isfield(parameters.BM.shift, 'exportTif') && parameters.BM.shift.exportTif
+                                BS_mean_export = uint16(real(BS_mean)*10000);
+                                imwrite(BS_mean_export, [parameters.path filesep 'Plots' filesep 'Bare' filesep modulusFilename '_shift_bare.tif']);
+                            end
 
                             %% Plot Brillouin Shift
                             plotData2D(parameters.path, BS_mean, pos, parameters.BM.shift.cax, '$\nu_\mathrm{B}$ [GHz]', ...
