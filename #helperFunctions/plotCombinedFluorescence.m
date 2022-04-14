@@ -38,6 +38,9 @@ function plotCombinedFluorescence(parameters)
         combination = parameters.Fluorescence.combinations{kk};
         for jj = 1:length(FLrepetitions)
             channels = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'memberNames');
+            if isempty(channels)
+                continue;
+            end
             %% Check if we have an image for every requested channel
             exportPlot = zeros(1, length(combination));
             for channelInd = 1:length(combination)
@@ -112,78 +115,81 @@ function plotCombinedFluorescence(parameters)
                 % ROI of Brillouin only
                 BMrepetitions = file.getRepetitions('Brillouin');
                 for mm = 1:length(BMrepetitions)
-                    BMfilename = parameters.filename;
-                    if length(BMrepetitions) > 1
-                        BMfilename = [BMfilename '_rep' num2str(BMrepetitions{mm})]; %#ok<AGROW>
+                    try
+                        BMfilename = parameters.filename;
+                        if length(BMrepetitions) > 1
+                            BMfilename = [BMfilename '_rep' num2str(BMrepetitions{mm})]; %#ok<AGROW>
+                        end
+
+                        BMresults = load([parameters.path filesep 'EvalData' filesep BMfilename '.mat']);
+
+                        scaleCalibration = file.getScaleCalibration('Fluorescence', FLrepetitions{jj});
+
+                        ROI = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'ROI', channels{1});
+
+                        [pixX, pixY] = meshgrid( ...
+                            (0:(ROI.width_physical - 1)) + ROI.left, ...
+                            (0:(ROI.height_physical - 1)) + ROI.bottom);
+
+                        pixX = pixX - scaleCalibration.origin(1);
+                        pixY = pixY - scaleCalibration.origin(2);
+
+                        micrometerX = pixX .* scaleCalibration.pixToMicrometerX(1) + pixY .* scaleCalibration.pixToMicrometerY(1) + ...
+                            scaleCalibration.positionStage(1);
+                        micrometerY = pixX .* scaleCalibration.pixToMicrometerX(2) + pixY .* scaleCalibration.pixToMicrometerY(2) + ...
+                            scaleCalibration.positionStage(2);
+
+                        %% Warp images for imagesc using affine transform
+                        n = norm([scaleCalibration.micrometerToPixX(1) scaleCalibration.micrometerToPixX(2)]);
+                        tform = affine2d([ ...
+                            scaleCalibration.micrometerToPixX(1) scaleCalibration.micrometerToPixX(2) 0; ...
+                            scaleCalibration.micrometerToPixY(1) scaleCalibration.micrometerToPixY(2) 0; ...
+                            0 0 n; ...
+                        ]/n);
+                        image_warped = imwarp(fluorescence, tform);
+
+                        imagePath = [parameters.path filesep 'Plots' filesep 'Bare' filesep parameters.filename ...
+                            '_FLrep' num2str(FLrepetitions{jj}) ...
+                            sprintf('_fluorescenceCombined_%s_BMrep', combination) num2str(BMrepetitions{mm}) '_fullFOV.png'];
+
+                        %% Export full field-of-view
+                        imwrite(flipud(image_warped), imagePath, 'BitDepth', 8);
+
+                        %% Only export the Brillouin field-of-view
+                        % Calculate the grid of the image
+                        x = linspace(min(micrometerX, [], 'all'), max(micrometerX, [], 'all'), round(size(image_warped, 2)));
+                        y = linspace(min(micrometerY, [], 'all'), max(micrometerY, [], 'all'), round(size(image_warped, 1)));
+
+                        [X, Y] = meshgrid(x, y);
+
+                        % Find the minimum resolution
+                        resolution = min( ... % [pix/µm]
+                            sqrt(sum(scaleCalibration.micrometerToPixX.^2)), ...
+                            sqrt(sum(scaleCalibration.micrometerToPixY.^2)) );
+
+                        % Create position vectors with the respective resolution
+                        x_min = min(BMresults.results.parameters.positions.X, [], 'all');
+                        x_max = max(BMresults.results.parameters.positions.X, [], 'all');
+                        x_new = linspace(x_min, x_max, round((x_max - x_min) * resolution));
+
+                        y_min = min(BMresults.results.parameters.positions.Y, [], 'all');
+                        y_max = max(BMresults.results.parameters.positions.Y, [], 'all');
+                        y_new = linspace(y_min, y_max, round((y_max - y_min) * resolution));
+
+                        [Xq, Yq] = meshgrid(x_new, y_new);
+
+                        % Interpolate the image
+                        image_warped_BM = uint8(zeros(length(y_new), length(x_new), size(image_warped, 3)));
+                        for dd = 1:size(image_warped, 3)
+                            image_warped_BM(:,:,dd) = uint8(interp2(X, Y, double(image_warped(:,:,dd)), Xq, Yq));
+                        end
+
+                        imagePath = [parameters.path filesep 'Plots' filesep 'Bare' filesep parameters.filename ...
+                            '_FLrep' num2str(FLrepetitions{jj}) ...
+                            sprintf('_fluorescenceCombined_%s_BMrep', combination) num2str(BMrepetitions{mm}) '.png'];
+                        imwrite(flipud(image_warped_BM), imagePath, 'BitDepth', 8);
+                    catch
                     end
-
-                    BMresults = load([parameters.path filesep 'EvalData' filesep BMfilename '.mat']);
-
-                    scaleCalibration = file.getScaleCalibration('Fluorescence', FLrepetitions{jj});
-
-                    ROI = file.readPayloadData('Fluorescence', FLrepetitions{jj}, 'ROI', channels{1});
-
-                    [pixX, pixY] = meshgrid( ...
-                        (0:(ROI.width_physical - 1)) + ROI.left, ...
-                        (0:(ROI.height_physical - 1)) + ROI.bottom);
-
-                    pixX = pixX - scaleCalibration.origin(1);
-                    pixY = pixY - scaleCalibration.origin(2);
-
-                    micrometerX = pixX .* scaleCalibration.pixToMicrometerX(1) + pixY .* scaleCalibration.pixToMicrometerY(1) + ...
-                        scaleCalibration.positionStage(1);
-                    micrometerY = pixX .* scaleCalibration.pixToMicrometerX(2) + pixY .* scaleCalibration.pixToMicrometerY(2) + ...
-                        scaleCalibration.positionStage(2);
-
-                    %% Warp images for imagesc using affine transform
-                    n = norm([scaleCalibration.micrometerToPixX(1) scaleCalibration.micrometerToPixX(2)]);
-                    tform = affine2d([ ...
-                        scaleCalibration.micrometerToPixX(1) scaleCalibration.micrometerToPixX(2) 0; ...
-                        scaleCalibration.micrometerToPixY(1) scaleCalibration.micrometerToPixY(2) 0; ...
-                        0 0 n; ...
-                    ]/n);
-                    image_warped = imwarp(fluorescence, tform);
-                    
-                    imagePath = [parameters.path filesep 'Plots' filesep 'Bare' filesep parameters.filename ...
-                        '_FLrep' num2str(FLrepetitions{jj}) ...
-                        sprintf('_fluorescenceCombined_%s_BMrep', combination) num2str(BMrepetitions{mm}) '_fullFOV.png'];
-                    
-                    %% Export full field-of-view
-                    imwrite(flipud(image_warped), imagePath, 'BitDepth', 8);
-                    
-                    %% Only export the Brillouin field-of-view
-                    % Calculate the grid of the image
-                    x = linspace(min(micrometerX, [], 'all'), max(micrometerX, [], 'all'), round(size(image_warped, 2)));
-                    y = linspace(min(micrometerY, [], 'all'), max(micrometerY, [], 'all'), round(size(image_warped, 1)));
-
-                    [X, Y] = meshgrid(x, y);
-                    
-                    % Find the minimum resolution
-                    resolution = min( ... % [pix/µm]
-                        sqrt(sum(scaleCalibration.micrometerToPixX.^2)), ...
-                        sqrt(sum(scaleCalibration.micrometerToPixY.^2)) );
-
-                    % Create position vectors with the respective resolution
-                    x_min = min(BMresults.results.parameters.positions.X, [], 'all');
-                    x_max = max(BMresults.results.parameters.positions.X, [], 'all');
-                    x_new = linspace(x_min, x_max, round((x_max - x_min) * resolution));
-                    
-                    y_min = min(BMresults.results.parameters.positions.Y, [], 'all');
-                    y_max = max(BMresults.results.parameters.positions.Y, [], 'all');
-                    y_new = linspace(y_min, y_max, round((y_max - y_min) * resolution));
-                    
-                    [Xq, Yq] = meshgrid(x_new, y_new);
-
-                    % Interpolate the image
-                    image_warped_BM = uint8(zeros(length(y_new), length(x_new), size(image_warped, 3)));
-                    for dd = 1:size(image_warped, 3)
-                        image_warped_BM(:,:,dd) = uint8(interp2(X, Y, double(image_warped(:,:,dd)), Xq, Yq));
-                    end
-
-                    imagePath = [parameters.path filesep 'Plots' filesep 'Bare' filesep parameters.filename ...
-                        '_FLrep' num2str(FLrepetitions{jj}) ...
-                        sprintf('_fluorescenceCombined_%s_BMrep', combination) num2str(BMrepetitions{mm}) '.png'];
-                    imwrite(flipud(image_warped_BM), imagePath, 'BitDepth', 8);
                 end
             end
         end
