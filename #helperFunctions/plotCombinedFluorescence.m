@@ -106,9 +106,8 @@ function plotCombinedFluorescence(parameters)
                         fluorescence(:, :, ch) = fluorescence(:, :, ch) ./ max(fluorescence(:, :, ch), [], 'all') * 255;
                     end
                 end
-                fluorescence = uint8(fluorescence);
 
-                imwrite(flipud(fluorescence), [parameters.path filesep 'Plots' filesep 'Bare' filesep ...
+                imwrite(flipud(uint8(fluorescence)), [parameters.path filesep 'Plots' filesep 'Bare' filesep ...
                     parameters.filename '_FLrep' num2str(FLrepetitions{jj}) '_fluorescenceCombined_' combination '.png'], 'BitDepth', 8);
                 
                 % In case we have a Brillouin measurement, also export the
@@ -146,14 +145,14 @@ function plotCombinedFluorescence(parameters)
                             scaleCalibration.micrometerToPixX(2) scaleCalibration.micrometerToPixY(2) 0; ...
                         0 0 n; ...
                         ]/n);
-                        image_warped = imwarp(fluorescence, tform);
+                        image_warped = imwarp(fluorescence, tform, 'FillValues', NaN);
 
                         imagePath = [parameters.path filesep 'Plots' filesep 'Bare' filesep parameters.filename ...
                             '_FLrep' num2str(FLrepetitions{jj}) ...
                             sprintf('_fluorescenceCombined_%s_BMrep', combination) num2str(BMrepetitions{mm}) '_fullFOV.png'];
 
                         %% Export full field-of-view
-                        imwrite(flipud(image_warped), imagePath, 'BitDepth', 8);
+                        imwrite(flipud(uint8(image_warped)), imagePath, 'BitDepth', 8, 'Alpha', flipud(double(max(~isnan(image_warped), [], 3))));
 
                         %% Only export the Brillouin field-of-view
                         % Calculate the grid of the image
@@ -179,15 +178,15 @@ function plotCombinedFluorescence(parameters)
                         [Xq, Yq] = meshgrid(x_new, y_new);
 
                         % Interpolate the image
-                        image_warped_BM = uint8(zeros(length(y_new), length(x_new), size(image_warped, 3)));
+                        image_warped_BM = zeros(length(y_new), length(x_new), size(image_warped, 3));
                         for dd = 1:size(image_warped, 3)
-                            image_warped_BM(:,:,dd) = uint8(interp2(X, Y, double(image_warped(:,:,dd)), Xq, Yq));
+                            image_warped_BM(:,:,dd) = interp2(X, Y, double(image_warped(:,:,dd)), Xq, Yq);
                         end
 
                         imagePath = [parameters.path filesep 'Plots' filesep 'Bare' filesep parameters.filename ...
                             '_FLrep' num2str(FLrepetitions{jj}) ...
                             sprintf('_fluorescenceCombined_%s_BMrep', combination) num2str(BMrepetitions{mm}) '.png'];
-                        imwrite(flipud(image_warped_BM), imagePath, 'BitDepth', 8);
+                        imwrite(flipud(uint8(image_warped_BM)), imagePath, 'BitDepth', 8, 'Alpha', flipud(double(max(~isnan(image_warped_BM), [], 3))));
                     catch
                     end
                 end

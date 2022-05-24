@@ -73,13 +73,14 @@ function plotFluorescence(parameters)
                         scaleCalibration.micrometerToPixX(2) scaleCalibration.micrometerToPixY(2) 0; ...
                         0 0 n; ...
                     ]/n);
-                    image_warped = imwarp(image, tform);
+                    image_warped = imwarp(image, tform, 'FillValues', NaN);
                     
                     imagePath = [parameters.path filesep 'Plots' filesep parameters.filename ...
                         '_FLrep' num2str(FLrepetitions{ii}) sprintf('_channel%s_BMrep', channel) num2str(BMrepetitions{jj}) '_fullFOV.png'];
                     
                     %% Export full field-of-view
-                    imwrite(flipud(image_warped), map, imagePath);
+                    RGB = ind2rgb(uint8(image_warped), map);
+                    imwrite(flipud(RGB), imagePath, 'Alpha', flipud(double(~isnan(image_warped))));
                     
                     %% Only export the Brillouin field-of-view
                     % Calculate the grid of the image
@@ -89,7 +90,7 @@ function plotFluorescence(parameters)
                     [X, Y] = meshgrid(x, y);
                     
                     % Find the minimum resolution
-                    resolution = min( ... % [pix/ï¿½m]
+                    resolution = min( ... % [pix/µm]
                         sqrt(sum(scaleCalibration.micrometerToPixX.^2)), ...
                         sqrt(sum(scaleCalibration.micrometerToPixY.^2)) );
 
@@ -112,7 +113,9 @@ function plotFluorescence(parameters)
 
                     imagePath = [parameters.path filesep 'Plots' filesep parameters.filename ...
                         '_FLrep' num2str(FLrepetitions{ii}) sprintf('_channel%s_BMrep', channel) num2str(BMrepetitions{jj}) '.png'];
-                    imwrite(flipud(image_warped_BM), map, imagePath);
+
+                    RGB = ind2rgb(uint8(image_warped_BM), map);
+                    imwrite(flipud(RGB), imagePath, 'Alpha', flipud(double(~isnan(image_warped_BM))));
                 end
             end
         end
