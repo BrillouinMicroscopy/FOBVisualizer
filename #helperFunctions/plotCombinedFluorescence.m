@@ -134,17 +134,9 @@ function plotCombinedFluorescence(parameters)
                     0 0 n; ...
                 ]/n);
                 image_warped = imwarp(fluorescence, tform, 'FillValues', NaN);
-
-                % Calculate the grid of the image
-                x = linspace(min(micrometerX, [], 'all'), max(micrometerX, [], 'all'), round(size(image_warped, 2)));
-                y = linspace(min(micrometerY, [], 'all'), max(micrometerY, [], 'all'), round(size(image_warped, 1)));
-
-                [X, Y] = meshgrid(x, y);
-
-                % Find the minimum resolution
-                resolution = min( ... % [pix/µm]
-                    sqrt(sum(scaleCalibration.micrometerToPixX.^2)), ...
-                    sqrt(sum(scaleCalibration.micrometerToPixY.^2)) );
+                
+                micrometerX_warped = imwarp(micrometerX, tform, 'FillValues', NaN);
+                micrometerY_warped = imwarp(micrometerY, tform, 'FillValues', NaN);
 
                 %% Export full field-of-view
                 imagePath = [parameters.path filesep 'Plots' filesep 'Bare' filesep parameters.filename ...
@@ -170,18 +162,22 @@ function plotCombinedFluorescence(parameters)
                         % Create position vectors with the respective resolution
                         x_min = min(BMresults.results.parameters.positions.X, [], 'all');
                         x_max = max(BMresults.results.parameters.positions.X, [], 'all');
-                        x_new = linspace(x_min, x_max, round((x_max - x_min) * resolution));
 
                         y_min = min(BMresults.results.parameters.positions.Y, [], 'all');
                         y_max = max(BMresults.results.parameters.positions.Y, [], 'all');
-                        y_new = linspace(y_min, y_max, round((y_max - y_min) * resolution));
-
-                        [Xq, Yq] = meshgrid(x_new, y_new);
 
                         % Interpolate the image
-                        image_warped_BM = zeros(length(y_new), length(x_new), size(image_warped, 3));
+                        idx_BM = micrometerX_warped >= x_min & ...
+                                 micrometerX_warped <= x_max & ...
+                                 micrometerY_warped >= y_min & ...
+                                 micrometerY_warped <= y_max;
+                        idx_BM_x = find(max(idx_BM, [], 1));
+                        idx_BM_y = find(max(idx_BM, [], 2));
+
+                        % Crop the image
+                        image_warped_BM = uint8(zeros(length(idx_BM_y), length(idx_BM_x), size(image_warped, 3)));
                         for dd = 1:size(image_warped, 3)
-                            image_warped_BM(:,:,dd) = interp2(X, Y, double(image_warped(:,:,dd)), Xq, Yq);
+                            image_warped_BM(:, :, dd) = uint8(image_warped(idx_BM_y, idx_BM_x, dd));
                         end
 
                         imagePath = [parameters.path filesep 'Plots' filesep 'Bare' filesep parameters.filename ...
